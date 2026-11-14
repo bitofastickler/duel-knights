@@ -1,9 +1,10 @@
-import {rand} from './util.js';
+import {rand,params} from './util.js';
 
 /* all sound is synthesised with Web Audio — no files */
 export const Snd=(()=>{
   let ctx,master,wet,nbuf,muted=false,crackT=0,beatT=0,beat=0;
   function init(){
+    if(params.has('silent'))return; // tests: no audio graph at all
     if(ctx){ctx.resume();return;}
     try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
     master=ctx.createGain();master.gain.value=muted?0:.85;

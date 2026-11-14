@@ -16,7 +16,7 @@ export const WEAPONS={
       const tip=add(new THREE.ConeGeometry(.018,.09,4),m.blade,g,0,1.09,0);tip.scale.x=.3;
       return {g,base:grp(g,0,.18,0),tip:grp(g,0,1.13,0)};
     }},
-  mace:{name:'Flanged mace',moves:MACE,radius:.06,reach:.88,blunt:true,
+  mace:{name:'Mace',moves:MACE,radius:.052,reach:.88,blunt:true,
     build({add,grp,cyl,sph,box,m},hand){
       const g=grp(hand);
       add(cyl(.018,.02,.2,8),m.leather,g);add(sph(.03,8,6),m.trim,g,0,-.125,0);

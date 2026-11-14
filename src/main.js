@@ -186,7 +186,9 @@ function step(dt){
     f.root.updateMatrixWorld(true);
     if(!f.ragdoll)f.readBlade();
   }
-  if(fight){sweep(player,enemy);if(game.phase==='fight')sweep(enemy,player);}
+  if(fight){ // random order, so neither side always wins a same-instant trade
+    const [f1,f2]=Math.random()<.5?[player,enemy]:[enemy,player];
+    sweep(f1,f2);if(game.phase==='fight')sweep(f2,f1);}
   // flow
   if(game.phase==='intro'){
     if(game.timer>1.5&&!game.gonged){game.gonged=true;Snd.gong();game.banner('Fight','');}
