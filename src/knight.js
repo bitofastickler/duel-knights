@@ -6,7 +6,7 @@ import {WEAPONS} from './weapons.js';
 
 /* ───────────────────────── knight model ─────────────────────────
    Every knight shares one skeleton; the look options change the armour.
-   o: steel, rough, trim, mail, cloth, blade (colours) · emblem · helm ('plume'|'horned'|'crest'|'great')
+   o: steel, rough, trim, mail, cloth, blade (colours) · emblem · helm ('plume'|'horned'|'crest'|'great') · crest (fin colour)
       scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS)
       capeW, capeL (cape size; its design comes from the emblem, see CAPES in textures.js) */
 export const HIP_Y=.88, UA=.29, FA=.27, TH=.45, SHN=.43, ANKLE=.07;
@@ -69,9 +69,9 @@ export function buildKnight(o){
   }else if(helm==='plume'){
     for(let i=0;i<7;i++){const k=i/6;add(sph(.05-.02*k,8,6),cloth,head,0,.36+.06*Math.sin(k*2.6),.03-k*.3).scale.x=.55;}
     add(cyl(.02,.03,.08,6),trim,head,0,.335,.03);
-  }else if(helm==='crest'){ // a low steel fin and a short horsehair tail
-    add(new THREE.CylinderGeometry(.14,.14,.016,18,1,false,0,Math.PI),trim,head,0,.29,-.01,0,0,Math.PI/2).scale.x=.9; // half-moon fin
-    for(let i=0;i<5;i++){const k=i/4;add(sph(.034-.012*k,8,6),cloth,head,0,.3-.12*k,-.15-k*.06).scale.x=.6;}
+  }else if(helm==='crest'){ // a half-moon fin in enamelled metal (o.crest colour)
+    const crestM=new THREE.MeshStandardMaterial({color:o.crest??o.trim,metalness:.9,roughness:.28,envMapIntensity:1.4});
+    add(new THREE.CylinderGeometry(.14,.14,.016,18,1,false,0,Math.PI),crestM,head,0,.29,-.01,0,0,Math.PI/2).scale.x=.9;
   }
   if(o.eyes||helm==='horned'){ // glowing eye slits — they flare during a heavy windup
     const eyeM=new THREE.MeshBasicMaterial({color:new THREE.Color(6,.5,.2)}),z=helm==='great'?.144:.122,y=helm==='great'?.2:.17;
