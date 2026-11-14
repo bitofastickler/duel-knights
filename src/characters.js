@@ -21,7 +21,7 @@ export const ROSTER=[
   {
     id:'varkos',name:'Varkos',title:'the Ashen King',
     blurb:'Broad and patient. His overheads land harder and his guard barely gives.',
-    look:{steel:0x2c2c33,rough:.38,trim:0x9a6b2a,mail:0x1c1c20,cloth:0x7a1210,blade:0xb8b0aa,emblem:'ashen',helm:'horned',scale:1.06,trailColor:0xff9a70},
+    look:{steel:0x2c2c33,rough:.38,trim:0x9a6b2a,mail:0x1c1c20,cloth:0x7a1210,blade:0xb8b0aa,emblem:'ashen',helm:'horned',scale:1.06,capeL:.84,trailColor:0xff9a70},
     alt:{cloth:0x3a3a44,trim:0x8a8f99,trailColor:0xc0c8ff},
     weapon:'sword',
     stats:{hp:104,speed:3.4,atkSpeed:.96,heavyDmg:1.08,guard:.86},
@@ -32,7 +32,7 @@ export const ROSTER=[
   {
     id:'ysolde',name:'Ysolde',title:'the Thorn',
     blurb:'Quick cuts, cheap dodges, and a riposte that punishes every mistake. She cannot take much.',
-    look:{steel:0xb6bbb4,rough:.28,trim:0xa7b2ae,mail:0x3a403a,cloth:0x1f5a34,blade:0xe8ecef,emblem:'thorn',helm:'crest',scale:.96,bulk:.85,trailColor:0x9dffc0},
+    look:{steel:0xb6bbb4,rough:.28,trim:0xa7b2ae,mail:0x3a403a,cloth:0x1f5a34,blade:0xe8ecef,emblem:'thorn',helm:'crest',scale:.96,bulk:.85,capeW:.38,capeL:.64,trailColor:0x9dffc0},
     alt:{cloth:0x5a1f4e,trailColor:0xffa0e8},
     weapon:'sword',
     stats:{hp:86,stam:110,speed:3.9,regen:36,dodgeCost:15,dodgeSpeed:9.4,atkSpeed:1.1,dmg:.85,riposte:1.5},
@@ -43,7 +43,7 @@ export const ROSTER=[
   {
     id:'brann',name:'Brann',title:'the Bellbreaker',
     blurb:'Slow, huge, and armed with a flanged mace. Every blow drains your guard and bleeds through the shield.',
-    look:{steel:0x6e5c4a,rough:.5,trim:0xb07a3a,mail:0x2e2620,cloth:0x5a3a1c,blade:0x8f8b86,emblem:'bell',helm:'great',scale:1.1,bulk:1.25,eyes:false,trailColor:0xffc070},
+    look:{steel:0x6e5c4a,rough:.5,trim:0xb07a3a,mail:0x2e2620,cloth:0x5a3a1c,blade:0x8f8b86,emblem:'bell',helm:'great',scale:1.1,bulk:1.25,capeW:.46,capeL:.76,eyes:false,trailColor:0xffc070},
     alt:{cloth:0x24343e,trim:0x8a96a0,trailColor:0xa0d8ff},
     weapon:'mace',
     stats:{hp:110,speed:3.05,regen:28,dodgeCost:24,dodgeSpeed:7.8},

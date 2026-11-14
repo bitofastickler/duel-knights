@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import {V} from './util.js';
 import {scene} from './render.js';
-import {tex,emblemCanvas} from './textures.js';
+import {tex,emblemCanvas,capeCanvas} from './textures.js';
 import {WEAPONS} from './weapons.js';
 
 /* ───────────────────────── knight model ─────────────────────────
    Every knight shares one skeleton; the look options change the armour.
    o: steel, rough, trim, mail, cloth, blade (colours) · emblem · helm ('plume'|'horned'|'crest'|'great')
-      scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS) */
+      scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS)
+      capeW, capeL (cape size; its design comes from the emblem, see CAPES in textures.js) */
 export const HIP_Y=.88, UA=.29, FA=.27, TH=.45, SHN=.43, ANKLE=.07;
 export const CHEST_OFF=V(0,.10,0), SH_R=V(-.25,.45,0), SH_L=V(.25,.45,0), HJ_L=V(.11,-.03,0), HJ_R=V(-.11,-.03,0);
 
@@ -73,8 +74,10 @@ export function buildKnight(o){
     add(sph(.014,6,6),eyeM,head,.042,y,z);add(sph(.014,6,6),eyeM,head,-.042,y,z);root.userData.eyes=eyeM;
   }
   // cape
-  const capeG=new THREE.PlaneGeometry(.5,.98,4,9);capeG.translate(0,-.49,0);
-  const cape=new THREE.Mesh(capeG,cloth);cape.position.set(0,.47,-.165);cape.castShadow=true;chest.add(cape);
+  const CW=o.capeW||.42,CL=o.capeL||.78;
+  const capeG=new THREE.PlaneGeometry(CW,CL,4,9);capeG.translate(0,-CL/2,0);
+  const capeMat=new THREE.MeshStandardMaterial({map:tex(capeCanvas(o)),alphaTest:.5,roughness:.85,metalness:0,envMapIntensity:.3,side:THREE.DoubleSide});
+  const cape=new THREE.Mesh(capeG,capeMat);cape.position.set(0,.47,-.165);cape.castShadow=true;chest.add(cape);
   // arms
   const arm=(s,SH)=>{
     const ua=grp(chest,SH.x,SH.y,SH.z);
@@ -109,7 +112,7 @@ export function buildKnight(o){
     thL:lL.th,shL:lL.sh,ftL:lL.ft,thR:lR.th,shR:lR.sh,ftR:lR.ft,weapon:W.g,bBase:W.base,bTip:W.tip,shield,shieldC};
   // remember rest transforms so the ragdoll can be undone
   const rest=[];for(const k of ['hips','uaR','faR','hR','uaL','faL','hL','thL','shL','ftL','thR','shR','ftR','weapon']){const b=bones[k];rest.push({b,parent:b.parent,pos:b.position.clone()});}
-  bones.rest=rest;bones.capeBase=capeG.attributes.position.array.slice();
+  bones.rest=rest;bones.capeBase=capeG.attributes.position.array.slice();bones.capeLen=CL;
   if(o.scale)root.scale.setScalar(o.scale);
   return bones;
 }
