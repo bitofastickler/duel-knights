@@ -1,12 +1,14 @@
 # Duel Knights
 
-A torch-lit 3D sword duel in the browser. Pick a knight, pick a foe, first to three rounds.
+A torch-lit 3D sword duel in the browser. Pick a knight, a foe and a battleground. First to three rounds.
 Everything (the knights, the arena, the sound) is built in code from primitives with
 [Three.js](https://threejs.org/). The game loads no models, textures or audio files.
 
 ![Choosing knights: Ysolde the Thorn against Brann the Bellbreaker](assets/select.jpg)
 
 ## Play
+
+[Play Duel Knights](https://bitofastickler.github.io/duel-knights/)
 
 The game is split into ES modules, and browsers won't load those from a file on disk.
 Serve the folder instead:
@@ -28,6 +30,27 @@ loads from a CDN, so you need to be online the first time.
 | Q | Focus (lock facing onto your foe) |
 | P / M | Pause / mute |
 
+## The arenas
+
+Choose a battleground beneath the knight cards; the scene previews your choice immediately.
+**Fight again** keeps your arena and knights. **Choose knights & arena** returns to selection.
+
+| Arena | Setting |
+|:--|:--|
+| **Ashen Courtyard** | The original firelit proving ground, with iron gates, castle walls and rival banners |
+| **Starfall Cloister** | A ruined mountaintop sanctuary: open gothic arches, a bronze astrolabe holding a fallen star, and an aurora above distant peaks |
+
+![Starfall Cloister, with its turning star reliquary and firelit compass floor](assets/starfall.jpg)
+
+Both arenas use the same flat floor, fighting radius, spawns and rules. Scenery stays outside
+the combat area. Starfall uses instanced masonry, a single low-poly aurora ribbon and two
+shadow-casting braziers (the courtyard uses four). Only the active arena is loaded; switching
+releases its geometry, materials, textures and shadow maps. The sky and reflection map are
+shared, and adaptive quality stays in effect across switches. No new downloaded assets or
+postprocessing passes are needed.
+
+A direct link can preselect the arena: [enter Starfall Cloister](https://bitofastickler.github.io/duel-knights/?arena=starfall).
+
 ## The knights
 
 | Knight | Weapon | Style |
@@ -43,7 +66,7 @@ loads from a CDN, so you need to be online the first time.
 
 ```
 index.html          page, styles, menus and HUD markup
-src/main.js         game flow, input, knight select, camera, HUD, main loop
+src/main.js         game flow, input, knight/arena select, camera, HUD, main loop
 src/characters.js   the roster: look, weapon, stats, AI style, select-screen ratings
 src/weapons.js      weapon models and hit shapes (longsword, mace)
 src/moves.js        poses and attack data (timings, damage, stamina, keyframes)
@@ -51,12 +74,15 @@ src/fighter.js      the fighter state machine, IK animation, hit volumes
 src/combat.js       hits, blocks, parries, clashes
 src/brain.js        the AI (difficulty settings + per-character style)
 src/knight.js       procedural knight model (helms, armour, shield)
-src/arena.js        the arena, fire and embers
+src/arena.js        arena switching, shared sky, courtyard, fire and embers
+src/starfall.js     Starfall Cloister scenery and ambient animation
 src/ragdoll.js      Verlet ragdoll for knockouts
 src/fx.js           sparks, dust, hit-stop, slow motion, camera shake
 src/audio.js        synthesised sound
 src/textures.js     procedural textures and heraldry
 tests/sim.mjs       AI-vs-AI smoke test and balance table
+tests/arenas.mjs    arena UI, resource cleanup and render-budget checks
+tests/browser.mjs   shared static-server / Playwright test harness
 ```
 
 ### Adding a knight
@@ -65,7 +91,26 @@ Add an entry to `ROSTER` in `src/characters.js`. Anything you leave out of `stat
 defaults in `BASE_STATS` (`src/fighter.js`). A new coat of arms goes in `EMBLEMS`
 (`src/textures.js`). Then run the balance check.
 
-## Balance check
+## Checks
+
+For arena/UI changes, install Playwright and its Chromium browser, then run:
+
+```bash
+node tests/arenas.mjs
+node tests/sim.mjs 1 courtyard
+node tests/sim.mjs 1 starfall
+```
+
+The arena check covers selection, keyboard operation, rematches, repeated switching, GPU
+resource counts, reduced-quality settings, small viewports and direct links. It compares
+render calls, triangles and shadow lights from the same camera; it does not claim a hardware
+FPS benchmark. Set `ARENA_SHOTS` to a directory to save menu screenshots.
+
+The harness also accepts `CHROMIUM_PATH`, `CHROMIUM_ARGS` (a JSON array), and `THREE_ROOT`
+(a local copy of the exact `three@0.160.0` npm package) for constrained/offline test machines.
+None of these are needed to play or deploy the game.
+
+### Balance check
 
 ```bash
 node tests/sim.mjs 20
