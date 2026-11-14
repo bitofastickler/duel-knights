@@ -10,7 +10,8 @@ const A=(t,o,e=0)=>K(t,{...TUCK,...o},e);
 export const POSE={
   guard:P(), block:P({cy:-.42,hy:-.07,cp:.08,lh:[.05,.42,.47],ld:[0,.05,1],rh:[-.34,.20,.12],rd:[.2,.9,.38]}),
   taunt:P({cy:.1,cp:-.03,hy:.02,rh:[-.44,.02,.15],rd:[-.45,-.6,.66],lh:[.38,.10,.12],ld:[.85,0,.5]}),
-  victory:P({cy:0,cp:-.12,hy:.02,rh:[-.3,1.0,.02],rd:[.02,1,.04],lh:[.3,.2,.2],ld:[.6,0,.8]}),
+  // sword raised high on a near-straight arm, shield lowered and turned out at the side
+  victory:P({cy:.12,cp:-.1,hy:.02,rh:[-.34,1.06,.12],rd:[-.12,1,.22],lh:[.38,.12,.02],ld:[.95,-.05,.3]}),
   rest:P({cy:0,cp:0,rh:[-.34,.02,.1],rd:[-.1,-.75,.65],lh:[.3,.15,.22],ld:[.5,0,.86]}),
   stagger:P({cy:.3,cp:-.32,hy:-.05,rh:[-.6,.35,.05],rd:[-.75,.25,.6],lh:[.5,.25,.08],ld:[.9,0,.4]}),
   broken:P({cy:-.2,cp:-.28,hy:-.1,rh:[-.5,.1,.1],rd:[-.5,-.2,.84],lh:[.55,.5,.0],ld:[.95,.3,.1]}),

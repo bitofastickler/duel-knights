@@ -103,7 +103,9 @@ function refreshSelect(){
 function syncDiffButtons(){document.querySelectorAll('.diffs button').forEach(b=>b.classList.toggle('sel',b.dataset.d===game.diff));}
 
 if(DEMO||params.has('debug'))window.__duel={game,FX,inp,step:dt=>step(dt),begin:()=>begin(),
-  get player(){return player;},get enemy(){return enemy;},select(p,e){game.sel.p=pick(p,game.sel.p);game.sel.e=pick(e,game.sel.e);refreshSelect();}};
+  get player(){return player;},get enemy(){return enemy;},select(p,e){game.sel.p=pick(p,game.sel.p);game.sel.e=pick(e,game.sel.e);refreshSelect();},
+  /** pin the camera (for screenshots); call with no arguments to release it */
+  cam(p,l){camHold=p?{p:V(...p),l:V(...l)}:null;}};
 
 /* ── input ── */
 function tryLock(){if(inp.noLock||document.pointerLockElement)return;try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{inp.noLock=true;});}catch(e){inp.noLock=true;}}
@@ -202,7 +204,9 @@ function step(dt){
 
 /* ── per-frame visuals ── */
 const camPos=V(0,3,-8),camLook=V(0,1.2,0),_cp=V(),_cl=V(),_a=V();
+let camHold=null;
 function updateCamera(dt,real){
+  if(camHold){camera.position.copy(camHold.p);camera.lookAt(camHold.l);return;}
   const ph=game.phase;
   if(ph==='title'||ph==='matchEnd'){
     game.orbit+=real*.11;const c=ph==='matchEnd'&&game.winner?game.winner.pos:_cl.set(0,0,0);

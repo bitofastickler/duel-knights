@@ -214,7 +214,7 @@ export class Fighter{
     }
     // cape
     const cp=b.cape.geometry.attributes.position,ca=cp.array,cb=b.capeBase,lift=clamp(lz*.11+Math.abs(lx)*.04,-.05,.5)+Math.abs(this.flP)*.5;
-    for(let j=0;j<ca.length;j+=3){const y=-cb[j+1]/.98;
+    for(let j=0;j<ca.length;j+=3){const y=-cb[j+1]/b.capeLen;
       ca[j+2]=-(y*(.1+lift*y)+Math.sin(this.t*3.2+y*5+cb[j]*3+this.seed)*.025*y*(1+amp*2));ca[j]=cb[j]*(1+y*.25)+lx*.03*y*y;}
     cp.needsUpdate=true;b.cape.geometry.computeVertexNormals();
   }
