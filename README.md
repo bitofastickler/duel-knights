@@ -2,7 +2,7 @@
 
 A torch-lit 3D sword duel in the browser. Pick a knight, pick a foe, first to three rounds.
 Everything (the knights, the arena, the sound) is built in code from primitives with
-[Three.js](https://threejs.org/). There are no asset files.
+[Three.js](https://threejs.org/). The game loads no models, textures or audio files.
 
 ![Choosing knights: Ysolde the Thorn against Brann the Bellbreaker](assets/select.jpg)
 
