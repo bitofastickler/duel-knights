@@ -4,6 +4,8 @@ A torch-lit 3D sword duel in the browser. Pick a knight, pick a foe, first to th
 Everything (the knights, the arena, the sound) is built in code from primitives with
 [Three.js](https://threejs.org/). There are no asset files.
 
+![Choosing knights: Ysolde the Thorn against Brann the Bellbreaker](assets/select.jpg)
+
 ## Play
 
 The game is split into ES modules, and browsers won't load those from a file on disk.
@@ -34,6 +36,8 @@ loads from a CDN, so you need to be online the first time.
 | **Varkos**, the Ashen King | Longsword | Bigger, sturdier guard, harder overheads, a step slower |
 | **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
+
+![Brann swings his mace at Ysolde](assets/fight.jpg)
 
 ## Project layout
 
