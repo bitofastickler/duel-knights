@@ -26,31 +26,38 @@ const url=`http://localhost:${server.address().port}/`;
 const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader']});
 const page=await browser.newPage({viewport:{width:800,height:500}});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.goto(url+'?demo');
+await page.goto(url+'?demo&silent');
 await page.waitForFunction(()=>window.__booted,null,{timeout:30000});
 const ids=await page.evaluate(()=>[...document.querySelectorAll('#pCards .card')].map(b=>b.dataset.id));
 
 const table={};let failed=false;
 for(const p of ids)for(const e of ids){
-  const r=await page.evaluate(([p,e,N])=>{
-    const D=window.__duel,out={wins:0,rounds:[0,0],secs:0,stuck:0};
-    for(let m=0;m<N;m++){
-      D.game.toTitle();D.select(p,e);D.begin();
-      let t=0;while(D.game.phase!=='matchEnd'&&t<900){D.step(1/90);t+=1/90;}
-      if(D.game.phase!=='matchEnd'){out.stuck++;continue;}
-      out.secs+=t;out.rounds[0]+=D.game.score[0];out.rounds[1]+=D.game.score[1];if(D.game.score[0]>D.game.score[1])out.wins++;
-    }
-    return out;
-  },[p,e,N]);
+  const r={wins:0,rounds:[0,0],secs:0,stuck:0};
+  for(let m=0;m<N;m++){
+    await page.evaluate(([p,e])=>{const D=window.__duel;D.game.toTitle();D.select(p,e);D.begin();D.simT=0;},[p,e]);
+    // step in short chunks and let the page breathe between them; one long blocking
+    // loop lets native memory pile up until the renderer crashes
+    let res;
+    do{res=await page.evaluate(()=>{const D=window.__duel;for(let i=0;i<1800&&D.game.phase!=='matchEnd'&&D.simT<900;i++){D.step(1/90);D.simT+=1/90;}
+        return {done:D.game.phase==='matchEnd',t:D.simT,score:D.game.score.slice()};});
+      await page.waitForTimeout(5);
+    }while(!res.done&&res.t<900);
+    if(!res.done){r.stuck++;continue;}
+    r.secs+=res.t;r.rounds[0]+=res.score[0];r.rounds[1]+=res.score[1];if(res.score[0]>res.score[1])r.wins++;
+  }
   table[p]=table[p]||{};table[p][e]=r;
   if(r.stuck)failed=true;
   process.stdout.write(`${p.padEnd(8)} vs ${e.padEnd(8)} wins ${r.wins}/${N}  rounds ${r.rounds[0]}-${r.rounds[1]}  avg ${(r.secs/Math.max(1,N-r.stuck)).toFixed(0)}s${r.stuck?`  STUCK ${r.stuck}`:''}\n`);
 }
-console.log('\nRow knight\'s match win rate against each column (mirror matches on the diagonal):');
+// combine both sides: X beats Y when X wins on the left or Y loses on the left
+const rate=(x,y)=>(table[x][y].wins+(N-table[y][x].stuck-table[y][x].wins))/(2*N-table[x][y].stuck-table[y][x].stuck);
+console.log('\nMatch win rate of each row knight against each column, both sides combined:');
 console.log(''.padEnd(10)+ids.map(i=>i.padStart(9)).join('')+'   overall');
-for(const p of ids){let w=0,n=0;
-  const row=ids.map(e=>{const r=table[p][e];if(p!==e){w+=r.wins;n+=N;}return (Math.round(r.wins/N*100)+'%').padStart(9);}).join('');
-  console.log(p.padEnd(10)+row+(Math.round(w/n*100)+'%').padStart(10));}
+for(const p of ids){let sum=0;
+  const row=ids.map(e=>{if(p===e)return '-'.padStart(9);const v=rate(p,e);sum+=v;return (Math.round(v*100)+'%').padStart(9);}).join('');
+  console.log(p.padEnd(10)+row+(Math.round(sum/(ids.length-1)*100)+'%').padStart(10));}
+const mir=ids.map(i=>table[i][i]).reduce((a,r)=>a+r.wins,0)/(ids.length*N);
+console.log(`Left side won ${Math.round(mir*100)}% of mirror matches (50% means no side bias).`);
 if(errors.length){console.log('\nPage errors:\n'+[...new Set(errors)].join('\n'));failed=true;}
 await browser.close();server.close();
 process.exit(failed?1:0);
