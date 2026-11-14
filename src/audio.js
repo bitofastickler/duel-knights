@@ -2,7 +2,7 @@ import {rand,params} from './util.js';
 
 /* all sound is synthesised with Web Audio — no files */
 export const Snd=(()=>{
-  let ctx,master,wet,nbuf,muted=false,crackT=0,beatT=0,beat=0;
+  let ctx,master,wet,nbuf,muted=false,crackT=0,beatT=0,beat=0,failT=-Infinity;
   function init(){
     if(params.has('silent'))return; // tests: no audio graph at all
     if(ctx){ctx.resume();return;}
@@ -62,7 +62,12 @@ export const Snd=(()=>{
     fall(){tone(90,30,.4,.8);noise(.35,'lowpass',900,90,.7,.6,.3);metal(240,.3,.1,.4);},
     clatter(){metal(rand(900,1500),.25,.1,.6);},
     gong(){[1,2.01,2.9,4.2].forEach((m,i)=>tone(98*m,97*m,3.2/(1+i*.5),.3/(1+i),'sine',.5));noise(.5,'bandpass',300,150,2,.2,.4);},
-    fail(){tone(160,110,.12,.12,'square');},
+    // A muffled exhale: soft onset, falling breath, no buzzer or echo.
+    fail(){
+      if(!ctx||muted||ctx.currentTime-failT<.65)return;
+      failT=ctx.currentTime;
+      noise(.28,'bandpass',650,350,.6,.16,0,.045);
+    },
     click(){tone(700,500,.06,.1,'triangle');},
     horn(win){const n=win?[196,247,294,392]:[196,185,165,123];n.forEach((f,i)=>{tone(f,f,.9,.14,'sawtooth',.5,i*.26);tone(f/2,f/2,.9,.14,'triangle',.4,i*.26);});},
     tick(dt,fight,tension){
