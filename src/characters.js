@@ -46,7 +46,7 @@ export const ROSTER=[
     look:{steel:0x6e5c4a,rough:.5,trim:0xb07a3a,mail:0x2e2620,cloth:0x5a3a1c,blade:0x8f8b86,emblem:'bell',helm:'great',scale:1.1,bulk:1.25,eyes:false,trailColor:0xffc070},
     alt:{cloth:0x24343e,trim:0x8a96a0,trailColor:0xa0d8ff},
     weapon:'mace',
-    stats:{hp:104,speed:3.05,regen:28,dodgeCost:24,dodgeSpeed:7.8},
+    stats:{hp:110,speed:3.05,regen:28,dodgeCost:24,dodgeSpeed:7.8},
     ai:{heavy:.7,pressure:1.2,bait:.2,feint:.2},
     rating:{health:5,power:5,speed:1,guard:3},
     lines:{fall:'The Bellbreaker falls silent',win:'The bell tolls for you'},
