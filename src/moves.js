@@ -59,9 +59,9 @@ const slow=(a,f,o={})=>({...a,wind:a.wind*f,act:a.act*f,rec:a.rec*f,poise:a.pois
 const maceHeavy={...SWORD.heavy,keys:SWORD.heavy.keys.slice()};
 maceHeavy.keys[1]=A(.62,{cy:-.4,cp:-.3,hy:.04,rh:[-.24,1.1,-.2],rd:[-.1,.4,-.91]},2); // hoisted higher behind the head
 export const MACE={
-  l1:slow(SWORD.l1,1.18,{dmg:12,cost:14,lunge:2.9,stun:.40,kb:3.2,bs:20,chip:2}),
-  l2:slow(SWORD.l2,1.18,{next:null,dmg:14,cost:15,lunge:2.8,stun:.46,kb:3.8,bs:22,chip:2}),
-  heavy:slow(maceHeavy,1.1,{dmg:31,cost:30,lunge:3.5,stun:.78,kb:6.8,bs:52,chip:6}),
+  l1:slow(SWORD.l1,1.18,{dmg:12,cost:14,lunge:2.9,stun:.33,kb:3.2,bs:18,chip:1}),
+  l2:slow(SWORD.l2,1.18,{next:null,dmg:14,cost:15,lunge:2.8,stun:.38,kb:3.8,bs:20,chip:1}),
+  heavy:slow(maceHeavy,1.1,{dmg:30,cost:30,lunge:3.5,stun:.68,kb:6.8,bs:50,chip:5}),
 };
 
 /** a fighter's own copy of a moveset, scaled by their attack speed and damage */
