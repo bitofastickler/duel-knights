@@ -212,6 +212,9 @@ export class Fighter{
       Q.e.set(lift*2.2,L?.3:-.42,0);Q.d.setFromEuler(Q.e).premultiply(Q.hInv);
       (L?b.ftL:b.ftR).quaternion.copy(Q.f).invert().multiply(Q.d);
     }
+    // skirt: swing forward with whichever thigh is further forward, so knees never poke through
+    {let f=0;for(const th of [b.thL,b.thR]){_q.t.copy(DOWN).applyQuaternion(th.quaternion);f=Math.max(f,Math.atan2(_q.t.z,-_q.t.y));}
+      b.skirt.rotation.x=damp(b.skirt.rotation.x,-clamp(f*.8,0,.95),dt>0?22:1e9,dt||1);} // damped, so it trails like cloth
     // cape
     const cp=b.cape.geometry.attributes.position,ca=cp.array,cb=b.capeBase,lift=clamp(lz*.11+Math.abs(lx)*.04,-.05,.5)+Math.abs(this.flP)*.5;
     for(let j=0;j<ca.length;j+=3){const y=-cb[j+1]/b.capeLen;

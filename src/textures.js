@@ -143,3 +143,14 @@ export function capeCanvas(o){
   (CAPES[o.emblem]||CAPES.azure)(g,o);
   return c;
 }
+
+/** the surcoat (chest and skirt): cloth with a trim pale down the middle, a cross-bar and edging */
+export function tabardCanvas(o,bar=true){
+  const w=64,h=128,c=cv(w,h),g=c.getContext('2d'),trim=css(o.trim);
+  g.fillStyle=css(o.cloth);g.fillRect(0,0,w,h);
+  for(let x=0;x<w;x+=12){const gr=g.createLinearGradient(x,0,x+12,0);gr.addColorStop(0,'rgba(0,0,0,.14)');gr.addColorStop(.5,'rgba(255,255,255,.04)');gr.addColorStop(1,'rgba(0,0,0,.14)');g.fillStyle=gr;g.fillRect(x,0,12,h);}
+  g.fillStyle=trim;g.fillRect(w/2-6,0,12,h);if(bar)g.fillRect(0,30,w,8);
+  g.fillStyle=shade(o.trim,.6);g.fillRect(0,0,3,h);g.fillRect(w-3,0,3,h);g.fillRect(0,h-4,w,4);
+  for(let i=0;i<900;i++){g.fillStyle=Math.random()<.5?'rgba(0,0,0,.08)':'rgba(255,255,255,.03)';g.fillRect(rand(w),rand(h),1,rand(1,3));}
+  return c;
+}

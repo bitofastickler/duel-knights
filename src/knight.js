@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {V} from './util.js';
 import {scene} from './render.js';
-import {tex,emblemCanvas,capeCanvas} from './textures.js';
+import {tex,emblemCanvas,capeCanvas,tabardCanvas} from './textures.js';
 import {WEAPONS} from './weapons.js';
 
 /* ───────────────────────── knight model ─────────────────────────
@@ -14,7 +14,7 @@ export const CHEST_OFF=V(0,.10,0), SH_R=V(-.25,.45,0), SH_L=V(.25,.45,0), HJ_L=V
 
 export function buildKnight(o){
   const m={
-    steel:new THREE.MeshStandardMaterial({color:o.steel,metalness:.82,roughness:o.rough,envMapIntensity:1.1}),
+    steel:new THREE.MeshStandardMaterial({color:o.steel,metalness:.82,roughness:o.rough,envMapIntensity:1.1,side:THREE.DoubleSide}),
     trim:new THREE.MeshStandardMaterial({color:o.trim,metalness:.9,roughness:.35,envMapIntensity:1.2}),
     mail:new THREE.MeshStandardMaterial({color:o.mail,metalness:.45,roughness:.7,envMapIntensity:.6}),
     cloth:new THREE.MeshStandardMaterial({color:o.cloth,roughness:.85,metalness:0,envMapIntensity:.3,side:THREE.DoubleSide}),
@@ -33,15 +33,19 @@ export function buildKnight(o){
   const chest=grp(hips,0,.10,0);chest.rotation.order='YXZ';
   // pelvis
   add(cyl(.2,.17,.18,12),mail,hips,0,-.02,0).scale.z=.74;
-  add(box(.25,.36,.02),cloth,hips,0,-.2,.135,-.06); // tabard skirt, front only (the cape covers the back)
-  add(box(.05,.36,.022),trim,hips,0,-.2,.14,-.06);
-  add(box(.03,.24,.19),steel,hips,.2,-.1,0,0,0,.2);add(box(.03,.24,.19),steel,hips,-.2,-.1,0,0,0,-.2);
+  // the surcoat: curved cloth that sits just outside the armour (flat panels let the plate poke through)
+  const coat=new THREE.MeshStandardMaterial({map:tex(tabardCanvas(o)),roughness:.85,metalness:0,envMapIntensity:.3,side:THREE.DoubleSide});
+  const arc=(rt,rb,h,half,sz)=>{const g=new THREE.CylinderGeometry(rt,rb,h,8,1,true,-half,half*2);g.scale(1,1,sz);return g;};
+  // front skirt, hinged at the belt; animate() swings it forward with the thighs
+  const skirtM=coat.clone();skirtM.map=tex(tabardCanvas(o,false)); // the skirt carries the pale but not the cross-bar
+  const skirt=grp(hips,0,-.035,0);{const g=arc(.205,.24,.34,.56,.78);g.translate(0,-.17,0);add(g,skirtM,skirt).castShadow=true;}
+  // faulds: curved hip plates (flat ones mirrored the braziers as a glaring rectangle)
+  for(const sd of [1,-1]){const g=new THREE.CylinderGeometry(.214,.236,.22,7,1,true,sd*Math.PI/2-.6,1.2);g.scale(1,1,.76);add(g,steel,hips,0,-.09,0);}
   // torso
   add(cyl(.235,.195,.44,14),steel,chest,0,.2,0).scale.z=.72;
-  add(sph(.2),steel,chest,0,.33,.015).scale.set(1.25,.8,.86);
-  add(box(.2,.44,.02),cloth,chest,0,.19,.158);
-  add(box(.045,.44,.024),trim,chest,0,.19,.16);add(box(.2,.045,.024),trim,chest,0,.3,.16);
-  add(cyl(.205,.205,.06,14),leather,chest,0,-.01,0).scale.z=.75;add(box(.06,.07,.03),trim,chest,0,-.01,.155);
+  add(sph(.2),steel,chest,0,.33,.015).scale.set(1.25,.8,.78);
+  add(arc(.25,.228,.44,.42,.72),coat,chest,0,.19,0);                    // surcoat front
+  add(cyl(.232,.232,.06,14),leather,chest,0,-.01,0).scale.z=.75;add(box(.06,.07,.03),trim,chest,0,-.01,.177); // belt over it
   add(cyl(.1,.135,.09,10),steel,chest,0,.5,0);
   // head
   const head=grp(chest,0,.55,0);head.rotation.order='YXZ';
@@ -66,7 +70,7 @@ export function buildKnight(o){
     for(let i=0;i<7;i++){const k=i/6;add(sph(.05-.02*k,8,6),cloth,head,0,.36+.06*Math.sin(k*2.6),.03-k*.3).scale.x=.55;}
     add(cyl(.02,.03,.08,6),trim,head,0,.335,.03);
   }else if(helm==='crest'){ // a low steel fin and a short horsehair tail
-    add(box(.016,.06,.27),trim,head,0,.36,-.01);
+    add(new THREE.CylinderGeometry(.14,.14,.016,18,1,false,0,Math.PI),trim,head,0,.29,-.01,0,0,Math.PI/2).scale.x=.9; // half-moon fin
     for(let i=0;i<5;i++){const k=i/4;add(sph(.034-.012*k,8,6),cloth,head,0,.3-.12*k,-.15-k*.06).scale.x=.6;}
   }
   if(o.eyes||helm==='horned'){ // glowing eye slits — they flare during a heavy windup
@@ -92,7 +96,7 @@ export function buildKnight(o){
   const aR=arm(-1,SH_R),aL=arm(1,SH_L);
   // legs
   const leg=(s,HJ)=>{
-    const th=grp(hips,HJ.x,HJ.y,HJ.z);add(cyl(.088,.07,TH,10),mail,th,0,-TH/2,0);add(box(.12,.28,.03),steel,th,0,-.2,.07);
+    const th=grp(hips,HJ.x,HJ.y,HJ.z);add(cyl(.088,.07,TH,10),mail,th,0,-TH/2,0);add(new THREE.CylinderGeometry(.102,.088,.28,8,1,true,-1.05,2.1),steel,th,0,-.2,0);
     const sh=grp(th,0,-TH,0);add(sph(.076,10,8),steel,sh,0,0,.01);add(cyl(.066,.05,.4,10),steel,sh,0,-.22,0);add(cyl(.07,.07,.025,10),trim,sh,0,-.07,0);
     const ft=grp(sh,0,-SHN,0);add(box(.095,.075,.25),steel,ft,0,-.03,.055);add(box(.08,.05,.08),steel,ft,0,-.045,.2);
     return {th,sh,ft};
@@ -108,7 +112,7 @@ export function buildKnight(o){
   const body=add(new THREE.ExtrudeGeometry(shp,{depth:.03,bevelEnabled:false,curveSegments:10}),steel,shield);body.scale.set(1.05,1.05,1);body.position.y=-.002;
   add(sph(.05,10,8),trim,shield,0,-.02,.035).scale.z=.6;
   const shieldC=grp(shield,0,-.03,.02);
-  const bones={root,hips,chest,head,cape,uaR:aR.ua,faR:aR.fa,hR:aR.hand,uaL:aL.ua,faL:aL.fa,hL:aL.hand,
+  const bones={root,hips,chest,head,cape,skirt,uaR:aR.ua,faR:aR.fa,hR:aR.hand,uaL:aL.ua,faL:aL.fa,hL:aL.hand,
     thL:lL.th,shL:lL.sh,ftL:lL.ft,thR:lR.th,shR:lR.sh,ftR:lR.ft,weapon:W.g,bBase:W.base,bTip:W.tip,shield,shieldC};
   // remember rest transforms so the ragdoll can be undone
   const rest=[];for(const k of ['hips','uaR','faR','hR','uaL','faL','hL','thL','shL','ftL','thR','shR','ftR','weapon']){const b=bones[k];rest.push({b,parent:b.parent,pos:b.position.clone()});}
