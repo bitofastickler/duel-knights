@@ -33,7 +33,7 @@ export function buildKnight(o){
   const chest=grp(hips,0,.10,0);chest.rotation.order='YXZ';
   // pelvis
   add(cyl(.2,.17,.18,12),mail,hips,0,-.02,0).scale.z=.74;
-  add(box(.25,.36,.02),cloth,hips,0,-.2,.135,-.06);add(box(.25,.36,.02),cloth,hips,0,-.2,-.135,.06);
+  add(box(.25,.36,.02),cloth,hips,0,-.2,.135,-.06); // tabard skirt, front only (the cape covers the back)
   add(box(.05,.36,.022),trim,hips,0,-.2,.14,-.06);
   add(box(.03,.24,.19),steel,hips,.2,-.1,0,0,0,.2);add(box(.03,.24,.19),steel,hips,-.2,-.1,0,0,0,-.2);
   // torso
