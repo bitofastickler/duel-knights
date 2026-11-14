@@ -2,7 +2,7 @@ import {$,clamp,angDiff,V,params,DEMO} from './util.js';
 import {renderer,scene,camera,canvas,gfx} from './render.js';
 import {Snd} from './audio.js';
 import {FX} from './fx.js';
-import {WALL_R,fires,buildArena,buildEmbers,updateEnvironment,setBannerEmblems} from './arena.js';
+import {WALL_R,ARENAS,arenaId,buildArena,buildEmbers,updateEnvironment,setBannerEmblems,setArenaQuality} from './arena.js';
 import {emblemCanvas} from './textures.js';
 import {Fighter} from './fighter.js';
 import {WEAPONS} from './weapons.js';
@@ -10,18 +10,18 @@ import {DIFF,Brain} from './brain.js';
 import {ROSTER,CHARACTERS} from './characters.js';
 import {initCombat,sweep} from './combat.js';
 
-buildArena();buildEmbers();
+buildArena(params.get('arena'));buildEmbers();
 
 const ui={hud:$('#hud'),pHp:$('#pHp'),pGhost:$('#pGhost'),pSt:$('#pSt'),eHp:$('#eHp'),eGhost:$('#eGhost'),eSt:$('#eSt'),pStBar:$('#pStBar'),
-  callout:$('#callout'),banner:$('#banner'),round:$('#roundLabel'),vig:$('#vig'),focus:$('#focus'),help:$('#help'),pName:$('#pName'),eName:$('#eName')};
+  callout:$('#callout'),banner:$('#banner'),round:$('#roundLabel'),vig:$('#vig'),focus:$('#focus'),help:$('#help'),pName:$('#pName'),eName:$('#eName'),arena:$('#arenaLabel')};
 const ROMAN=['I','II','III','IV','V'];
 const inp={keys:{},light:false,heavy:false,dodge:false,blockPressed:false,aim:0,pitch:.24,locked:false,noLock:false,focus:false,mx:0};
 const pick=(id,fallback)=>CHARACTERS[id]?id:fallback;
 let player=null,enemy=null;
 
 const game={
-  phase:'title',paused:false,diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:0,
-  sel:{p:pick(params.get('p'),'caldwin'),e:pick(params.get('e'),'varkos')},
+  phase:'title',paused:false,diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:arenaId()==='starfall'?Math.PI+.25:0,
+  sel:{p:pick(params.get('p'),'caldwin'),e:pick(params.get('e'),'varkos'),arena:arenaId()},
   callout(t){ui.callout.textContent=t;ui.callout.classList.remove('go');void ui.callout.offsetWidth;ui.callout.classList.add('go');},
   banner(big,sub=''){ui.banner.children[0].textContent=big;ui.banner.children[1].textContent=sub;ui.banner.classList.toggle('on',!!big);},
   stamFail(){Snd.fail();ui.pStBar.classList.remove('fail');void ui.pStBar.offsetWidth;ui.pStBar.classList.add('fail');},
@@ -55,7 +55,7 @@ const game={
     $('#end').classList.remove('hidden');ui.hud.classList.add('off');this.banner('');
     if(document.pointerLockElement)document.exitPointerLock();Snd.horn(win);
   },
-  /** back to the knight select screen */
+  /** back to the knight and arena selection screen */
   toTitle(){
     this.phase='title';setPause(false);this.banner('');
     $('#end').classList.add('hidden');ui.hud.classList.add('off');$('#title').classList.remove('hidden');
@@ -89,11 +89,27 @@ function buildSelect(){
     el.innerHTML=ROSTER.map(c=>`<button class="card" data-id="${c.id}"><img alt="" src="${emblemCanvas(c.look.emblem).toDataURL()}"><span><b>${c.name}</b><small>${WEAPONS[c.weapon].name}</small></span></button>`).join('');
     el.addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;Snd.init();Snd.click();game.sel[side]=b.dataset.id;refreshSelect();});
   }
-  refreshSelect();
+  $('#arenaCards').innerHTML=ARENAS.map(a=>`<button class="arena-card ${a.id}" data-arena="${a.id}" aria-pressed="false" aria-describedby="arenaDescription">
+    <span class="arena-sigil" aria-hidden="true">${a.id==='starfall'?'✧':'♜'}</span>
+    <span><small>${a.tag}</small><b>${a.name}</b></span><span class="arena-check" aria-hidden="true">✓</span></button>`).join('');
+  $('#arenaCards').addEventListener('click',e=>{
+    const b=e.target.closest('[data-arena]');if(!b)return;
+    Snd.init();Snd.click();selectArena(b.dataset.arena);
+  });
+  refreshArena();refreshSelect();
+}
+function selectArena(id){
+  if(game.phase!=='title'||!ARENAS.some(a=>a.id===id))return;
+  game.sel.arena=id;game.orbit=id==='starfall'?Math.PI+.25:0;buildArena(id);setBannerEmblems(player.char.look.emblem,enemy.char.look.emblem);refreshArena();
+}
+function refreshArena(){
+  const a=ARENAS.find(a=>a.id===game.sel.arena);
+  document.querySelectorAll('[data-arena]').forEach(b=>{const on=b.dataset.arena===a.id;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
+  $('#arenaDescription').textContent=a.description;ui.arena.textContent=a.name;
 }
 function refreshSelect(){
   for(const side of ['p','e']){
-    document.querySelectorAll(`#${side}Cards .card`).forEach(b=>b.classList.toggle('sel',b.dataset.id===game.sel[side]));
+    document.querySelectorAll(`#${side}Cards .card`).forEach(b=>{const on=b.dataset.id===game.sel[side];b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
     const c=CHARACTERS[game.sel[side]],r=c.rating;
     $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><p>${c.blurb}</p>
       <div class="meters"><span>Health</span>${pips(r.health)}<span>Power</span>${pips(r.power)}<span>Speed</span>${pips(r.speed)}<span>Guard</span>${pips(r.guard)}</div>`;
@@ -102,7 +118,7 @@ function refreshSelect(){
 }
 function syncDiffButtons(){document.querySelectorAll('.diffs button').forEach(b=>b.classList.toggle('sel',b.dataset.d===game.diff));}
 
-if(DEMO||params.has('debug'))window.__duel={game,FX,inp,step:dt=>step(dt),begin:()=>begin(),
+if(DEMO||params.has('debug'))window.__duel={game,FX,inp,renderer,scene,camera,gfx,selectArena,setArenaQuality,step:dt=>step(dt),begin:()=>begin(),
   get player(){return player;},get enemy(){return enemy;},select(p,e){game.sel.p=pick(p,game.sel.p);game.sel.e=pick(e,game.sel.e);refreshSelect();},
   /** pin the camera (for screenshots); call with no arguments to release it */
   cam(p,l){camHold=p?{p:V(...p),l:V(...l)}:null;}};
@@ -130,6 +146,14 @@ addEventListener('mousedown',e=>{
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{
   if(e.repeat)return;const k=e.code;inp.keys[k]=true;
+  // Let native buttons handle Tab, Space and Enter on selection/help screens.
+  if(inMenu()){
+    if((k==='Enter'||k==='KeyR')&&game.phase==='matchEnd'&&!e.target.closest('button'))begin();
+    if(k==='Escape'&&game.phase==='matchEnd')game.toTitle();
+    if(k==='KeyM')Snd.toggle();
+    if(k==='Enter'&&game.phase==='title'&&$('#how').classList.contains('hidden')&&!e.target.closest('button'))begin();
+    return;
+  }
   if(['Space','ShiftLeft','ShiftRight','KeyW','KeyA','KeyS','KeyD','Tab'].includes(k))e.preventDefault();
   if(k==='Space')inp.blockPressed=true;
   if(k==='ShiftLeft'||k==='ShiftRight')inp.dodge=true;
@@ -137,9 +161,6 @@ addEventListener('keydown',e=>{
   if(k==='KeyQ'||k==='Tab'){inp.focus=!inp.focus;ui.focus.classList.toggle('on',inp.focus);ui.focus.textContent=inp.focus?'Q · Focused':'Q · Focus';}
   if(k==='KeyM')Snd.toggle();
   if(k==='KeyP'&&!inMenu()){setPause(!game.paused);if(!game.paused)tryLock();}
-  if((k==='Enter'||k==='KeyR')&&game.phase==='matchEnd')begin();
-  if(k==='Escape'&&game.phase==='matchEnd')game.toTitle();
-  if(k==='Enter'&&game.phase==='title'&&$('#how').classList.contains('hidden'))begin();
 });
 addEventListener('keyup',e=>{inp.keys[e.code]=false;});
 addEventListener('blur',()=>{inp.keys={};if(game.phase==='fight'&&!DEMO)setPause(true);});
@@ -263,8 +284,8 @@ function frame(now){
   fpsAcc+=real;fpsN++;
   if(fpsAcc>3){const fps=fpsN/fpsAcc;fpsAcc=0;fpsN=0;
     if(fps<38&&quality>0){quality--;
-      if(quality===1){gfx.pixelRatio=1;renderer.setPixelRatio(1);gfx.composer&&gfx.composer.setPixelRatio(1);fires.filter(f=>f.light&&f.light.castShadow).forEach((f,i)=>{if(i%2)f.light.castShadow=false;});}
-      else{gfx.bloomOn=false;fires.forEach(f=>{if(f.light)f.light.castShadow=false;});}
+      if(quality===1){gfx.pixelRatio=1;renderer.setPixelRatio(1);gfx.composer&&gfx.composer.setPixelRatio(1);setArenaQuality(quality);}
+      else{gfx.bloomOn=false;setArenaQuality(quality);}
     }}
 }
 buildSelect();syncDiffButtons();game.pips();

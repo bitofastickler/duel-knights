@@ -3,31 +3,11 @@
 // Serves the repo, opens the game in headless Chromium (Playwright), and for every
 // pairing of knights runs whole matches with both sides on the "knight" AI, stepping
 // the simulation as fast as it will go. Fails on any page error or a match that never ends.
-import http from 'node:http';
-import fs from 'node:fs';
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
-import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url);
-const {chromium}=require('playwright');
-
-const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const N=+(process.argv[2]||6);
-const TYPES={'.html':'text/html','.js':'text/javascript','.png':'image/png'};
-const server=http.createServer((req,res)=>{
-  const f=path.join(ROOT,decodeURIComponent(new URL(req.url,'http://x').pathname));
-  if(!f.startsWith(ROOT)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){
-    const idx=path.join(f,'index.html');if(fs.existsSync(idx)){res.writeHead(200,{'content-type':'text/html'});return res.end(fs.readFileSync(idx));}
-    res.writeHead(404);return res.end();}
-  res.writeHead(200,{'content-type':TYPES[path.extname(f)]||'application/octet-stream'});res.end(fs.readFileSync(f));
-}).listen(0);
-const url=`http://localhost:${server.address().port}/`;
-
-const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader']});
-const page=await browser.newPage({viewport:{width:800,height:500}});
-const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.goto(url+'?demo&silent');
-await page.waitForFunction(()=>window.__booted,null,{timeout:30000});
+import {launchGame} from './browser.mjs';
+const N=+(process.argv[2]||6),arena=process.argv[3]||'courtyard';
+const run=await launchGame('?demo&silent&arena='+encodeURIComponent(arena),{width:800,height:500});
+const {page,errors}=run;
+console.log('Arena: '+arena);
 const ids=await page.evaluate(()=>[...document.querySelectorAll('#pCards .card')].map(b=>b.dataset.id));
 
 const table={};let failed=false;
@@ -59,5 +39,5 @@ for(const p of ids){let sum=0;
 const mir=ids.map(i=>table[i][i]).reduce((a,r)=>a+r.wins,0)/(ids.length*N);
 console.log(`Left side won ${Math.round(mir*100)}% of mirror matches (50% means no side bias).`);
 if(errors.length){console.log('\nPage errors:\n'+[...new Set(errors)].join('\n'));failed=true;}
-await browser.close();server.close();
+await run.close();
 process.exit(failed?1:0);
