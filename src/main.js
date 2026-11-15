@@ -86,7 +86,8 @@ function placeForTitle(){player.reset(V(0,0,-1.25),0);enemy.reset(V(0,0,1.25),Ma
 const pips=n=>`<span class="meter">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</span>`;
 function buildSelect(){
   for(const [side,el] of [['p',$('#pCards')],['e',$('#eCards')]]){
-    el.innerHTML=ROSTER.map(c=>`<button class="card" data-id="${c.id}"><img alt="" src="${emblemCanvas(c.look.emblem).toDataURL()}"><span><b>${c.name}</b><small>${WEAPONS[c.weapon].name}</small></span></button>`).join('');
+    el.innerHTML=ROSTER.map(c=>{const label=`${c.name}, ${c.title} (${WEAPONS[c.weapon].name})`;
+      return `<button class="card" data-id="${c.id}" title="${label}" aria-label="${label}"><img alt="" src="${emblemCanvas(c.look.emblem).toDataURL()}"></button>`;}).join('');
     el.addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;Snd.init();Snd.click();game.sel[side]=b.dataset.id;refreshSelect();});
   }
   $('#arenaCards').innerHTML=ARENAS.map(a=>`<button class="arena-card ${a.id}" data-arena="${a.id}" aria-pressed="false" aria-describedby="arenaDescription">
@@ -111,7 +112,7 @@ function refreshSelect(){
   for(const side of ['p','e']){
     document.querySelectorAll(`#${side}Cards .card`).forEach(b=>{const on=b.dataset.id===game.sel[side];b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
     const c=CHARACTERS[game.sel[side]],r=c.rating;
-    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><p>${c.blurb}</p>
+    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><div class="arm">${WEAPONS[c.weapon].name}</div><p>${c.blurb}</p>
       <div class="meters"><span>Health</span>${pips(r.health)}<span>Power</span>${pips(r.power)}<span>Speed</span>${pips(r.speed)}<span>Guard</span>${pips(r.guard)}</div>`;
   }
   if(game.phase==='title'){makeFighters();placeForTitle();}

@@ -26,7 +26,7 @@ try{
   assert.ok(starfall.shadowLights<baseline.shadowLights);
   console.log('Render budget:',JSON.stringify({courtyard:baseline,starfall}));
   // Choosing every knight leaves the selected arena intact and updates heraldry.
-  for(const side of ['p','e'])for(const id of ['caldwin','varkos','ysolde','brann']){
+  for(const side of ['p','e'])for(const id of ['caldwin','varkos','ysolde','brann','oriel','corvin','sigrun']){
     await page.locator(`#${side}Cards [data-id="${id}"]`).click();assert.equal((await state())[side],id);assert.equal(await selected(),'starfall');
   }
   await page.locator('[data-arena="courtyard"]').focus();await page.keyboard.press('Enter');

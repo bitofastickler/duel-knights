@@ -34,6 +34,43 @@ export function brickCanvas(){
 /* ── heraldry: each knight's arms, painted on a 256² canvas ──
    `banner` is the cloth colour used for that knight's banners in the arena. */
 const star=(g,x,y,r1,r2)=>{g.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2,r=i%2?r2:r1;g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);}g.fill();};
+/* charges shared by a shield and its cape, drawn in the 256² emblem space; `at` places one on another canvas */
+const at=(g,x,y,k,draw)=>{g.save();g.translate(x,y);g.scale(k,k);g.translate(-128,-128);draw(g);g.restore();};
+function sunCharge(g,gold='#e2b13c'){ // a sun in splendour: straight scarlet rays between wavy gold ones
+  for(let i=0;i<16;i++){const a=i/16*TAU,c=Math.cos(a),s=Math.sin(a),px=-s,py=c;
+    if(i%2){g.fillStyle=gold;g.beginPath();g.moveTo(128+c*40+px*13,128+s*40+py*13);
+      g.bezierCurveTo(128+c*66+px*20,128+s*66+py*20,128+c*76-px*12,128+s*76-py*12,128+c*100,128+s*100);
+      g.bezierCurveTo(128+c*80-px*2,128+s*80-py*2,128+c*66+px*4,128+s*66+py*4,128+c*40-px*13,128+s*40-py*13);g.fill();}
+    else{g.fillStyle='#b5321c';g.beginPath();g.moveTo(128+c*40+px*14,128+s*40+py*14);g.lineTo(128+c*116,128+s*116);g.lineTo(128+c*40-px*14,128+s*40-py*14);g.fill();}}
+  g.fillStyle=gold;g.beginPath();g.arc(128,128,50,0,TAU);g.fill();
+  g.strokeStyle='#7a3c12';g.lineWidth=5;g.stroke();g.lineWidth=2.5;g.beginPath();g.arc(128,128,38,0,TAU);g.stroke();
+}
+function crowCharge(g){ // a crow on a bare branch, black against the moon
+  g.fillStyle='#d9d3c0';g.beginPath();g.arc(128,120,84,0,TAU);g.fill();
+  g.fillStyle='rgba(120,110,140,.28)';for(const [x,y,r] of [[96,84,15],[158,104,10],[120,160,19],[170,150,8]]){g.beginPath();g.arc(x,y,r,0,TAU);g.fill();}
+  const ink='#0e0b12';g.fillStyle=ink;g.strokeStyle=ink;g.lineCap='round';
+  g.lineWidth=9;g.beginPath();g.moveTo(34,206);g.quadraticCurveTo(128,184,226,196);g.stroke();
+  g.lineWidth=5;g.beginPath();g.moveTo(182,193);g.lineTo(214,170);g.moveTo(70,198);g.lineTo(48,184);g.stroke();
+  g.save();g.translate(134,134);g.rotate(.5);g.beginPath();g.ellipse(0,0,50,29,0,0,TAU);g.fill();g.restore();    // body
+  g.beginPath();g.arc(92,92,21,0,TAU);g.fill();                                                                    // head
+  g.beginPath();g.moveTo(78,80);g.lineTo(38,98);g.lineTo(80,108);g.closePath();g.fill();                           // beak
+  g.beginPath();g.moveTo(160,140);g.lineTo(228,178);g.lineTo(206,196);g.lineTo(150,168);g.closePath();g.fill();    // tail
+  g.lineWidth=5;g.beginPath();g.moveTo(124,160);g.lineTo(120,192);g.moveTo(142,158);g.lineTo(142,190);g.stroke(); // legs
+  g.strokeStyle='#4a4358';g.lineWidth=3;g.beginPath();g.moveTo(112,118);g.quadraticCurveTo(150,116,186,156);g.moveTo(122,134);g.quadraticCurveTo(150,134,176,160);g.stroke(); // wing
+  g.fillStyle='#d9d3c0';g.beginPath();g.arc(86,88,3.5,0,TAU);g.fill();
+}
+function boarCharge(g,hide='#eadfc6',ink='#22130a'){ // a boar's head in profile: blunt snout, heavy jowl, a crest of bristles
+  g.lineJoin='round';g.fillStyle=hide;g.strokeStyle=ink;g.lineWidth=6;
+  g.beginPath();g.moveTo(34,138);g.lineTo(92,114);g.lineTo(126,86);g.lineTo(136,52);g.lineTo(160,72);          // snout, brow, ear
+  for(let i=0;i<4;i++){g.lineTo(170+i*16,50+i*15);g.lineTo(178+i*16,80+i*15);}                                // bristles down the neck
+  g.lineTo(232,152);g.lineTo(212,162);g.lineTo(228,184);g.lineTo(206,194);g.lineTo(216,218);                  // torn at the neck
+  g.quadraticCurveTo(158,230,114,200);g.lineTo(40,184);g.closePath();g.fill();g.stroke();
+  g.beginPath();g.ellipse(38,161,10,24,.06,0,TAU);g.fill();g.lineWidth=5;g.stroke();                           // the snout's flat end
+  g.fillStyle='#fffaf0';g.beginPath();g.moveTo(102,192);g.quadraticCurveTo(116,150,90,112);g.quadraticCurveTo(92,154,76,186);g.closePath();g.fill();g.lineWidth=4;g.stroke(); // tusk
+  g.fillStyle=ink;g.beginPath();g.arc(130,110,6.5,0,TAU);g.fill();
+  g.beginPath();g.ellipse(35,153,2.5,4,0,0,TAU);g.fill();g.beginPath();g.ellipse(39,169,2.5,4,0,0,TAU);g.fill();
+  g.lineWidth=5;g.beginPath();g.moveTo(110,92);g.lineTo(142,104);g.moveTo(56,186);g.lineTo(74,178);g.stroke();  // scowl, lip
+}
 export const EMBLEMS={
   azure:{banner:'#173d8c',paint(g){
     g.fillStyle='#1c4aa6';g.fillRect(0,0,256,256);
@@ -63,6 +100,22 @@ export const EMBLEMS={
     g.beginPath();g.arc(128,212,13,0,TAU);g.fill();
     g.strokeStyle='#17120e';g.lineWidth=8;g.beginPath();g.arc(128,64,11,0,TAU);g.stroke();
     g.strokeStyle='#e0b85a';g.lineWidth=5;g.beginPath();g.moveTo(128,78);g.lineTo(118,108);g.lineTo(136,126);g.lineTo(120,152);g.lineTo(134,174);g.lineTo(126,196);g.stroke();
+  }},
+  sun:{banner:'#cdbf9c',paint(g){ // ivory, a sun in splendour
+    g.fillStyle='#e9dfc4';g.fillRect(0,0,256,256);
+    g.strokeStyle='#c99a34';g.lineWidth=12;g.strokeRect(0,0,256,256);
+    sunCharge(g);
+  }},
+  crow:{banner:'#3b2a7a',paint(g){ // violet, a crow against a full moon
+    g.fillStyle='#46308f';g.fillRect(0,0,256,256);
+    g.fillStyle='#cfc9dc';for(const [x,y,r] of [[26,30,5],[232,24,4],[224,226,5],[24,232,4],[206,60,3]])star(g,x,y,r*2,r*.8);
+    crowCharge(g);
+  }},
+  boar:{banner:'#8e3712',paint(g){ // burnt orange under a black chief of tusks
+    g.fillStyle='#b8491a';g.fillRect(0,0,256,256);
+    g.fillStyle='#1b120c';g.fillRect(0,0,256,40);
+    g.fillStyle='#eadfc6';for(let i=0;i<8;i++){g.beginPath();g.moveTo(i*32+4,40);g.lineTo(i*32+16,8);g.lineTo(i*32+28,40);g.fill();}
+    at(g,128,150,.84,boarCharge);
   }},
 };
 export function emblemCanvas(kind){
@@ -135,6 +188,45 @@ const CAPES={
     g.fillStyle='#17120e';g.beginPath();g.moveTo(46,128);g.quadraticCurveTo(47,78,64,72);g.quadraticCurveTo(81,78,82,128);g.lineTo(92,140);g.lineTo(36,140);g.closePath();g.fill();
     g.beginPath();g.arc(64,148,7,0,TAU);g.fill();g.lineWidth=4;g.strokeStyle='#17120e';g.beginPath();g.arc(64,67,6,0,TAU);g.stroke();
     g.strokeStyle=brass;g.lineWidth=3;g.beginPath();g.moveTo(64,76);g.lineTo(58,92);g.lineTo(68,104);g.lineTo(59,118);g.lineTo(66,138);g.stroke();
+  },
+  sun(g,o){ // a long ivory cape, scalloped and gilt at the hem, the sun pouring its rays down the back
+    g.beginPath();g.moveTo(0,0);g.lineTo(W,0);g.lineTo(W,H-34);
+    for(let i=3;i>=0;i--)g.quadraticCurveTo(i*32+16,H+26,i*32,H-34);
+    g.closePath();g.clip();
+    folds(g,o.cloth);
+    const gold=css(o.trim);g.strokeStyle=gold;
+    g.globalAlpha=.75;for(let i=-3;i<=3;i++){g.lineWidth=i%2?2:3.5;g.beginPath();g.moveTo(64+i*5,104);g.lineTo(64+i*20,H-44);g.stroke();}g.globalAlpha=1;
+    g.lineWidth=5;g.beginPath();g.moveTo(W,H-36);for(let i=3;i>=0;i--)g.quadraticCurveTo(i*32+16,H+16,i*32,H-36);g.stroke();
+    g.lineWidth=4;g.beginPath();g.moveTo(5,0);g.lineTo(5,H-34);g.moveTo(W-5,0);g.lineTo(W-5,H-34);g.stroke();
+    g.fillStyle=gold;for(let i=0;i<4;i++){g.beginPath();g.arc(i*32+16,H-30,4,0,TAU);g.fill();}
+    at(g,64,78,.47,g=>sunCharge(g,gold));
+  },
+  crow(g,o){ // a mantle of black feathers, row over row, under a moonlit yoke
+    g.beginPath();g.moveTo(0,0);g.lineTo(W,0);g.lineTo(W,H-52);
+    for(let i=4;i>=0;i--){const x0=(i+1)*W/5,x1=i*W/5;g.lineTo(x0-4,H-30);g.lineTo((x0+x1)/2+3,H-1);g.lineTo(x1+5,H-34);g.lineTo(x1,H-52);}
+    g.closePath();g.clip();
+    folds(g,o.cloth);
+    for(let row=0;row<8;row++){const y=H+4-row*24,n=5,fw=W/n,off=row%2?fw/2:0; // bottom row first, so each row overlaps the one below
+      for(let i=-1;i<=n;i++){const x=i*fw+off;
+        g.fillStyle=(i+row)%2?'#131119':'#1c1826';g.beginPath();g.moveTo(x,y-46);g.lineTo(x+fw,y-46);g.quadraticCurveTo(x+fw-1,y-12,x+fw/2,y);g.quadraticCurveTo(x+1,y-12,x,y-46);g.fill();
+        g.strokeStyle='rgba(150,135,190,.4)';g.lineWidth=1.2;g.stroke();
+        g.beginPath();g.moveTo(x+fw/2,y-44);g.lineTo(x+fw/2,y-3);g.stroke();}}
+    g.save();g.beginPath();g.rect(0,0,W,96);g.clip();folds(g,o.cloth);g.restore();
+    g.fillStyle='#131119';for(let i=0;i<8;i++){g.beginPath();g.moveTo(i*16,88);g.lineTo(i*16+8,104);g.lineTo(i*16+16,88);g.fill();}
+    g.fillStyle=css(o.trim);g.fillRect(0,84,W,3);
+    at(g,64,44,.3,crowCharge);
+  },
+  boar(g,o){ // a short riding cloak under a pelt, the hem cut into fangs
+    g.beginPath();g.moveTo(0,0);g.lineTo(W,0);g.lineTo(W,H-40);
+    for(let i=5;i>=0;i--){const x0=(i+1)*W/6,x1=i*W/6;g.lineTo((x0+x1)/2,H-2);g.lineTo(x1,H-40);}
+    g.closePath();g.clip();
+    folds(g,o.cloth);
+    g.fillStyle='#1b120c';g.fillRect(0,H-66,W,10);g.fillStyle='#eadfc6';g.fillRect(0,H-54,W,4);
+    for(let i=0;i<6;i++){const x=(i+.5)*W/6;g.beginPath();g.moveTo(x-6,H-40);g.lineTo(x,H-16);g.lineTo(x+6,H-40);g.fill();}
+    at(g,64,132,.4,boarCharge);
+    g.fillStyle='#3a2a1d';g.fillRect(0,0,W,50);                                         // the pelt across the shoulders
+    for(let x=0;x<W;x+=7){g.beginPath();g.moveTo(x-5,46);g.lineTo(x+rand(-2,4),rand(58,74));g.lineTo(x+7,46);g.fill();}
+    for(let i=0;i<260;i++){g.strokeStyle=Math.random()<.5?'rgba(0,0,0,.35)':'rgba(190,150,110,.22)';g.lineWidth=1;const x=rand(W),y=rand(64);g.beginPath();g.moveTo(x,y);g.lineTo(x+rand(-2,2),y+rand(4,10));g.stroke();}
   },
 };
 export function capeCanvas(o){

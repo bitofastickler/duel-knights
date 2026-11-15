@@ -65,6 +65,40 @@ export const MACE={
   heavy:slow(maceHeavy,1.1,{dmg:30,cost:30,lunge:3.5,stun:.72,kb:6.8,bs:50,chip:5}),
 };
 
+/* the spear — all point. Three thrusts from well outside sword reach and an overhand stab.
+   Light on stamina and it shoves the foe back, but each wound is small and a shield turns it easily. */
+const JAB={cy:.36,cp:.16,hy:-.08,hz:.16,sf:.22,rh:[-.10,.40,.56],rd:[.02,0,1]},
+  JAB2={cy:.38,cp:.13,hy:-.06,hz:.14,sf:.2,rh:[-.08,.52,.56],rd:[0,.05,1]},
+  LUNGE={cy:.5,cp:.26,hy:-.16,hz:.26,sf:.36,rh:[-.06,.36,.58],rd:[.02,-.02,1]},
+  STAB={cy:.4,cp:.38,hy:-.16,hz:.16,sf:.3,rh:[-.08,.5,.56],rd:[.02,-.5,.87]};
+export const SPEAR={
+  l1:{kind:'light',next:'l2',wind:.27,act:.10,rec:.40,dmg:7,cost:10,lunge:2.6,stun:.28,kb:3.0,bs:10,chip:0,keys:[
+    A(.27,{cy:-.5,hy:-.04,rh:[-.38,.36,-.06],rd:[.04,.06,1]},2),A(.33,JAB,3),A(.44,JAB),K(.77,{})]},
+  l2:{kind:'light',next:'l3',wind:.21,act:.10,rec:.42,dmg:8,cost:10,lunge:2.4,stun:.28,kb:3.0,bs:10,chip:0,keys:[
+    A(.21,{cy:-.45,hy:-.03,rh:[-.36,.48,-.02],rd:[.03,0,1]},2),A(.27,JAB2,3),A(.38,JAB2),K(.73,{})]},
+  l3:{kind:'light',next:null,wind:.30,act:.12,rec:.60,dmg:12,cost:13,lunge:3.6,stun:.36,kb:4.4,bs:14,chip:0,keys:[
+    A(.30,{cy:-.65,hy:-.08,rh:[-.38,.30,-.1],rd:[.05,.08,1]},2),A(.37,LUNGE,3),A(.56,LUNGE),K(1.02,{})]},
+  heavy:{kind:'heavy',next:null,wind:.60,act:.14,rec:.64,dmg:22,cost:25,lunge:3.6,stun:.58,kb:6.2,bs:34,chip:3,poise:.3,keys:[
+    A(.26,{cy:-.3,cp:-.06,rh:[-.36,.72,-.02],rd:[0,.5,.86]},1),
+    A(.60,{cy:-.5,cp:-.14,hy:.03,rh:[-.34,1.0,-.2],rd:[.02,-.2,.98]},2),   // couched overhead, point on the foe
+    A(.66,{cy:.1,cp:.2,hy:-.08,hz:.1,rh:[-.16,.8,.3],rd:[.02,-.38,.92]},3),
+    A(.72,STAB),A(.94,STAB),K(1.38,{})]},
+};
+
+/* the war axe — two hewing cuts into a chop. It bites deepest of all on flesh,
+   but it is short, costly to swing and takes little out of a raised shield. */
+const CHOP={cy:.3,cp:.42,hy:-.16,hz:.12,sf:.25,rh:[-.04,.2,.48],rd:[.1,-.55,.83]};
+export const AXE={
+  l1:slow(SWORD.l1,1.03,{dmg:13,cost:12,lunge:2.8,stun:.33,kb:2.6,bs:13}),
+  l2:slow(SWORD.l2,1.03,{dmg:14,cost:12,lunge:2.6,stun:.33,kb:2.6,bs:13}),
+  l3:{kind:'light',next:null,wind:.31,act:.12,rec:.54,dmg:19,cost:14,lunge:3.1,stun:.42,kb:4.2,bs:17,chip:0,keys:[
+    A(.31,{cy:-.45,cp:-.12,hy:.02,rh:[-.32,.92,-.1],rd:[-.1,.8,-.6]},2),
+    A(.37,{cy:0,cp:.12,rh:[-.2,.8,.34],rd:[0,.6,.8]},3),
+    A(.41,{cy:.2,cp:.32,hy:-.1,hz:.1,rh:[-.1,.5,.52],rd:[.05,0,1]}),
+    A(.45,CHOP),A(.60,CHOP),K(.97,{})]},
+  heavy:slow(SWORD.heavy,1.04,{dmg:34,cost:27,lunge:3.3,stun:.66,kb:6,bs:40,chip:3}),
+};
+
 /** a fighter's own copy of a moveset, scaled by their attack speed and damage */
 export function buildMoves(base,{atkSpeed=1,dmg=1,heavyDmg=1}={}){
   const out={},f=1/atkSpeed;

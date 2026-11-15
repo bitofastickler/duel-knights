@@ -90,7 +90,7 @@ export class Fighter{
   }
   get fwd(){return _q.t.set(Math.sin(this.yaw),0,Math.cos(this.yaw));}
   setClip(keys){this.clip={t:0,keys:[{t:0,p:this.pose.slice(),e:0},...keys]};}
-  setStance(n,t=.16){if(this.stance!==n){this.stance=n;this.setClip([{t,p:POSE[n],e:1}]);}}
+  setStance(n,t=.16){if(this.stance!==n){this.stance=n;this.setClip([{t,p:this.weapon.poses?.[n]||POSE[n],e:1}]);}}
   useStam(c){if(this.stam<=0){if(this.isPlayer)this.onStamFail();return false;}
     this.stam-=c;this.regenDelay=.85;if(this.stam<=0){this.stam=0;this.regenDelay=1.6;}return true;}
   startAttack(id){

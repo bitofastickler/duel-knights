@@ -104,15 +104,16 @@
   .side-pick{width:min(370px,100%);text-align:left;background:rgba(6,5,8,.55);border:1px solid rgba(140,111,51,.35);padding:14px 16px 6px}
   @media (max-width:900px){.pick{justify-content:center}}
   .pickLabel{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;text-align:center}
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  button.card{display:flex;align-items:center;gap:10px;padding:7px 10px;text-align:left;text-transform:none;letter-spacing:.1em}
-  .card img{width:30px;height:30px;border:1px solid var(--gold2);flex:none}
-  .card b{display:block;font-weight:normal;font-size:12.5px;letter-spacing:.1em;white-space:nowrap;text-transform:uppercase}
-  .card small{display:block;opacity:.6;font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin-top:2px}
-  button.card.sel{background:rgba(217,183,108,.16);color:#fff;border-color:var(--gold);box-shadow:0 0 18px rgba(255,170,70,.22)}
-  .bio{margin-top:12px;min-height:128px}
+  /* one coat of arms per knight; the name, weapon and style of the chosen one are spelled out in the bio below */
+  .cards{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+  button.card{padding:3px;line-height:0;opacity:.72;transition:opacity .12s,transform .12s}
+  button.card:hover,button.card:focus-visible{opacity:1}
+  .card img{width:34px;height:34px;display:block}
+  button.card.sel{opacity:1;background:rgba(217,183,108,.16);border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 18px rgba(255,170,70,.35);transform:translateY(-2px)}
+  .bio{margin-top:12px;min-height:146px}
   .bio h3{margin:0;font-weight:normal;font-size:17px;letter-spacing:.16em;text-transform:uppercase;color:#f3e2b4}
-  .bio h3 small{font-size:11px;letter-spacing:.24em;opacity:.65;margin-left:8px}
+  .bio h3 small{font-size:11px;letter-spacing:.24em;opacity:.65;margin-left:8px;white-space:nowrap}
+  .bio .arm{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-top:3px}
   .bio p{margin:4px 0 8px;font-size:12px;letter-spacing:.05em;opacity:.75;line-height:1.5}
   .meters{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:10px;letter-spacing:.25em;text-transform:uppercase;align-items:center}
   .meter{display:flex;gap:4px}.meter i{width:16px;height:6px;border:1px solid var(--gold2);background:rgba(0,0,0,.4)}.meter i.on{background:var(--gold)}
@@ -184,7 +185,7 @@
   <div class="rule"></div>
   <div class="keys">
     <b>W A S D</b><span>Move — you face where the mouse aims</span>
-    <b>Left click</b><span>Light attack — sword knights chain three cuts, the mace two swings</span>
+    <b>Left click</b><span>Light attack — swords, the spear and the axe chain three blows, the mace two</span>
     <b>Right click</b><span>Heavy overhead — slow, crushes guards. Tap Space mid-windup to feint</span>
     <b>Space</b><span>Block. Raise it just before the blow lands to parry</span>
     <b>Shift</b><span>Dodge toward your movement keys</span>
@@ -192,7 +193,8 @@
     <b>P · M</b><span>Pause · mute</span>
   </div>
   <div class="note" style="margin:0 0 24px">Every action costs stamina — an empty bar breaks your guard. Weapons only wound what they actually touch.<br>
-    A mace drains your guard fast and its blows bleed through the shield: dodge it, or parry it.</div>
+    A mace drains your guard fast and its blows bleed through the shield: dodge it, or parry it.<br>
+    A spear strikes from beyond sword reach, so close the distance. An axe hits hardest of all, but a raised shield shrugs it off.</div>
   <button class="main" id="howBack">Back</button>
 </div>
 

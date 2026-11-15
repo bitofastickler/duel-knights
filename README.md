@@ -4,7 +4,7 @@ A torch-lit 3D sword duel in the browser. Pick a knight, a foe and a battlegroun
 Everything (the knights, the arena, the sound) is built in code from primitives with
 [Three.js](https://threejs.org/). The game loads no models, textures or audio files.
 
-![Choosing knights: Ysolde the Thorn against Brann the Bellbreaker](assets/select.jpg)
+![Choosing knights: Dame Oriel the Sunsworn against Corvin the Gallows Crow](assets/select.jpg)
 
 ## Play
 
@@ -23,7 +23,7 @@ loads from a CDN, so you need to be online the first time.
 | Input | Action |
 |:--|:--|
 | W A S D | Move. You face where the mouse aims |
-| Left click | Light attack. Swords chain three cuts, the mace two swings |
+| Left click | Light attack. Swords, the spear and the axe chain three blows, the mace two |
 | Right click | Heavy overhead. Tap Space during the windup to feint |
 | Space | Block. Raise it just before a blow lands to parry |
 | Shift | Dodge toward your movement keys |
@@ -59,6 +59,9 @@ A direct link can preselect the arena: [enter Starfall Cloister](https://bitofas
 | **Varkos**, the Ashen King | Longsword | Bigger, sturdier guard, harder overheads, a step slower |
 | **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
+| **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows |
+| **Corvin**, the Gallows Crow | Spear | Three thrusts from beyond sword reach. Fragile once you are inside the point |
+| **Sigrun**, the Red Tusk | War axe | All attack. Hits hardest of all, but short, costly, and weak against a raised shield |
 
 ![Brann swings his mace at Ysolde](assets/fight.jpg)
 
@@ -68,12 +71,12 @@ A direct link can preselect the arena: [enter Starfall Cloister](https://bitofas
 index.html          page, styles, menus and HUD markup
 src/main.js         game flow, input, knight/arena select, camera, HUD, main loop
 src/characters.js   the roster: look, weapon, stats, AI style, select-screen ratings
-src/weapons.js      weapon models and hit shapes (longsword, mace)
+src/weapons.js      weapon models and hit shapes (longsword, mace, spear, war axe)
 src/moves.js        poses and attack data (timings, damage, stamina, keyframes)
 src/fighter.js      the fighter state machine, IK animation, hit volumes
 src/combat.js       hits, blocks, parries, clashes
 src/brain.js        the AI (difficulty settings + per-character style)
-src/knight.js       procedural knight model (helms, armour, shield)
+src/knight.js       procedural knight model (helms, armour, mantles, shields)
 src/arena.js        arena switching, shared sky, courtyard, fire and embers
 src/starfall.js     Starfall Cloister scenery and ambient animation
 src/ragdoll.js      Verlet ragdoll for knockouts
@@ -88,8 +91,10 @@ tests/browser.mjs   shared static-server / Playwright test harness
 ### Adding a knight
 
 Add an entry to `ROSTER` in `src/characters.js`. Anything you leave out of `stats` uses the
-defaults in `BASE_STATS` (`src/fighter.js`). A new coat of arms goes in `EMBLEMS`
-(`src/textures.js`). Then run the balance check.
+defaults in `BASE_STATS` (`src/fighter.js`). A new coat of arms goes in `EMBLEMS` and its
+cape in `CAPES` (both in `src/textures.js`). The `look` picks a helm, a shield shape and what
+lies over the shoulders from the options listed at the top of `src/knight.js`. A new weapon is
+a model in `src/weapons.js` plus a moveset in `src/moves.js`. Then run the balance check.
 
 ## Checks
 
@@ -117,7 +122,7 @@ node tests/sim.mjs 20
 ```
 
 This runs 20 AI-vs-AI matches for every pairing in headless Chromium (needs
-[Playwright](https://playwright.dev/)). It prints each knight's win rate against the others,
+[Playwright](https://playwright.dev/)). With seven knights that is 49 pairings, so allow a while. It prints each knight's win rate against the others,
 and fails if the page throws an error or a match never ends. AI-vs-AI results are a sanity
 check, not a substitute for playing. At 20 matches per pairing, expect about ±15% noise.
 
