@@ -47,6 +47,10 @@ export function buildKnight(o){
   add(arc(.25,.228,.44,.42,.72),coat,chest,0,.19,0);                    // surcoat front
   add(cyl(.232,.232,.06,14),leather,chest,0,-.01,0).scale.z=.75;add(box(.06,.07,.03),trim,chest,0,-.01,.177); // belt over it
   add(cyl(.1,.135,.09,10),steel,chest,0,.5,0);
+  // neck: a mail column from the gorget up into the helm, with a standing collar around its base.
+  // It belongs to the chest, so the helm can turn and nod on it without a gap opening underneath.
+  add(cyl(.086,.098,.2,12),mail,chest,0,.59,0);
+  add(cyl(.106,.102,.04,12),steel,chest,0,.56,0);add(cyl(.109,.109,.012,12),trim,chest,0,.583,0);
   // head
   const head=grp(chest,0,.55,0);head.rotation.order='YXZ';
   if(helm==='great'){ // flat-topped great helm with a cross of brass
