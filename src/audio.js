@@ -49,6 +49,10 @@ export const Snd=(()=>{
     swing(h,blunt){
       if(blunt)noise(h?.42:.28,'bandpass',h?160:260,h?700:1100,1.1,h?.4:.26);
       else noise(h?.34:.2,'bandpass',h?260:520,h?1500:2400,1.4,h?.34:.2);},
+    /** a charged blow gathering: a thin rising ring */
+    charge(){tone(520,1650,.17,.06,'triangle',.5);noise(.17,'bandpass',900,4600,3,.1,.3,.07);},
+    /** …and let go: air torn open over the stamp of a foot */
+    drive(){noise(.3,'bandpass',420,3400,1.5,.42,.2);tone(118,40,.24,.5);noise(.15,'lowpass',650,90,.7,.36);},
     clang(p=1){metal(rand(620,900),.5*p,.2*p,.6);noise(.06,'highpass',3000,5000,.7,.3*p,.4);},
     /** a mace on a shield: a dull boom with a short ring */
     thunk(p=1){tone(105,42,.32*p,.65);noise(.22,'lowpass',1600,140,.7,.55*p,.35);metal(rand(260,330),.35*p,.12*p,.5);},

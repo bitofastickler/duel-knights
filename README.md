@@ -60,7 +60,7 @@ A direct link can preselect the arena: [enter Starfall Cloister](https://bitofas
 | **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
 | **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows |
-| **Corvin**, the Gallows Crow | Spear, in both hands | No shield. Three thrusts from beyond sword reach and a scything sweep. Fragile once you are inside the point |
+| **Corvin**, the Gallows Crow | Spear, in both hands | No shield. Three thrusts from beyond sword reach; the heavy is a charged thrust driven down from a high guard. Fragile once you are inside the point |
 | **Sigrun**, the Red Tusk | War axe | All attack. Hits hardest of all, but short, costly, and weak against a raised shield |
 
 ![Brann swings his mace at Ysolde](assets/fight.jpg)

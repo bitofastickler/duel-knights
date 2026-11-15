@@ -260,10 +260,14 @@ function updateHud(real){
 function updateTrails(){
   for(const f of [player,enemy]){
     let s=0,hot=false;
-    if(f.state==='attack'){s=f.phase==='active'?1:f.phase==='wind'?(f.st>f.atk.wind-.08?.5:0):Math.max(0,.6-(f.st-f.atk.wind-f.atk.act)*5);hot=f.atk.kind==='heavy';}
+    if(f.state==='attack'){s=f.phase==='active'?1:f.phase==='wind'?(f.st>f.atk.wind-.08?.5:0):Math.max(0,.6-(f.st-f.atk.wind-f.atk.act)*5);hot=f.atk.kind==='heavy'&&!f.atk.charged;} // a charged blow keeps the knight's own colour, to match its glow
     _a.lerpVectors(f.blade[0],f.blade[1],.35);f.trail.push(_a,f.blade[1],f.ragdoll?0:s,hot);
     const ey=f.root.userData.eyes; // glowing eyes flare during a heavy windup
     if(ey){const k=f.state==='attack'&&f.atk.kind==='heavy'&&f.phase==='wind'?1:0;ey.color.setRGB(6+k*14,.5+k*2,.2);}
+    const ch=f.root.userData.charge; // a charged blow: the head kindles through the windup, flares as it is loosed, then cools
+    if(ch){const a=f.atk,on=f.state==='attack'&&a.charged&&!f.ragdoll;
+      const k=!on?0:f.phase==='wind'?Math.pow(f.st/a.wind,2.2)*.8:f.phase==='active'?1.8:Math.max(0,1.2-(f.st-a.wind-a.act)*5);
+      ch.emissiveIntensity+=(k*3.2-ch.emissiveIntensity)*.3;}
   }
 }
 

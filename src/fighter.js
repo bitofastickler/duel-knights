@@ -152,14 +152,18 @@ export class Fighter{
         if(this.state==='free')this.setStance(this.victory?'victory':this.rest?'rest':I.taunt?'taunt':this.blocking?'block':'guard',this.blocking?.09:.18);
         break;}
       case 'attack':{
-        const a=this.atk,prev=this.phase;this.st+=dt;
+        const a=this.atk,prev=this.phase,st0=this.st;this.st+=dt;
         this.phase=this.st<a.wind?'wind':this.st<a.wind+a.act?'active':'recover';
+        const ring=a.wind*.74; // a charged blow rings once it can no longer be feinted
+        if(a.charged&&st0<ring&&this.st>=ring)Snd.charge();
         this.turn(this.phase==='wind'?(this.isPlayer&&!this.brain?2.4:1.7):this.phase==='active'?.4:1.2,dt);
         if(a.kind==='heavy'&&this.phase==='wind'&&this.st<a.wind*.72&&this.st>.08&&I.blockPressed){ // feint
           this.state='free';this.atk=null;this.stam=Math.min(this.maxSt,this.stam+12);this.emit('feint');break;}
         if(this.st>a.wind-.1&&this.phase!=='recover'){this.vel.x=fx*a.lunge;this.vel.z=fz*a.lunge;}
         else{this.vel.x=damp(this.vel.x,0,9,dt);this.vel.z=damp(this.vel.z,0,9,dt);}
-        if(prev==='wind'&&this.phase==='active')Snd.swing(a.kind==='heavy',this.weapon.blunt);
+        if(prev==='wind'&&this.phase==='active'){
+          if(a.charged){Snd.drive();FX.dust(this.pos,5);FX.shake(.22);FX.kick(2.5);} // the stamp of the leading foot
+          else Snd.swing(a.kind==='heavy',this.weapon.blunt);}
         if(prev==='active'&&this.phase==='recover'&&!this.swingContact)this.emit('whiff',a.kind);
         const tot=a.wind+a.act+a.rec+(this.chainLock?.14:0);
         if(this.phase==='recover'){

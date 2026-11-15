@@ -23,7 +23,8 @@ export const PARRY_WINDOW=.2;
 
 /* An attack: wind/act/rec phase lengths (s), dmg, stamina cost, lunge speed,
    stun on hit, knockback, bs = stamina it drains from a blocker,
-   chip = health it takes through a block, poise = time after which a heavy shrugs off light hits. */
+   chip = health it takes through a block, poise = time after which a heavy shrugs off light hits.
+   Optional `charged`: a showpiece blow (see the spear's heavy). */
 
 /* the longsword — a three-cut chain and an overhead */
 export const SWORD={
@@ -66,14 +67,15 @@ export const MACE={
 };
 
 /* the spear — held in both hands, no shield: the right hand at the butt drives it, the haft slides through the left.
-   Three thrusts from well outside sword reach, then a scything sweep with the whole length of the haft.
+   Three thrusts from well outside sword reach. The heavy is taken from the old spear plays: the spear is
+   couched beside the head in both hands, point on the foe, then driven down through the chest on a long step.
    Light on stamina and it shoves the foe back, but each wound is small and a shield turns it easily. */
 const SG={cy:-.55,rh:[-.2,.1,0],rd:[.24,.32,.92]};                    // on guard: butt at the right hip, point at the foe's throat
 const S=(t,o={},e=0)=>({t,p:P({...SG,...o}),e});
 const JAB={cy:-.45,cp:.14,hy:-.08,hz:.16,sf:.22,rh:[-.1,.3,.28],rd:[.04,.04,1]},
   JAB2={cy:-.45,cp:.12,hy:-.06,hz:.14,sf:.2,rh:[-.1,.4,.28],rd:[.02,.08,1]},
   LUNGE={cy:-.4,cp:.26,hy:-.16,hz:.28,sf:.36,rh:[-.08,.3,.3],rd:[.03,0,1]},
-  SWEPT={cy:-.55,cp:.18,hy:-.12,hz:.16,sf:.25,rh:[.2,.32,.01],rd:[-.55,-.02,.84]};
+  DRIVE={cy:-.3,cp:.32,hy:-.15,hz:.3,sf:.42,rh:[-.08,.5,.34],rd:[.03,-.15,.99]};
 export const SPEAR_POSES={
   guard:P(SG),
   block:P({cy:-.3,cp:.06,hy:-.06,rh:[-.27,.26,.28],rd:[.86,.34,.38]}),       // the haft thrown across the body
@@ -90,12 +92,12 @@ export const SPEAR={
     S(.21,{cy:-.8,hy:-.03,rh:[-.3,.24,-.18],rd:[.12,.1,.99]},2),S(.27,JAB2,3),S(.38,JAB2),S(.73,{},1)]},
   l3:{kind:'light',next:null,wind:.30,act:.12,rec:.60,dmg:12,cost:13,lunge:3.6,stun:.36,kb:4.4,bs:14,chip:0,keys:[
     S(.30,{cy:-.9,hy:-.1,rh:[-.3,.12,-.24],rd:[.14,.14,.98]},2),S(.37,LUNGE,3),S(.56,LUNGE),S(1.02,{},1)]},
-  heavy:{kind:'heavy',next:null,wind:.60,act:.14,rec:.64,dmg:22,cost:25,lunge:3.2,stun:.58,kb:6.2,bs:34,chip:3,poise:.3,keys:[
-    S(.26,{cy:.1,cp:-.04,rh:[-.26,.26,.12],rd:[.7,.2,.68]},1),               // the point swings out to the left…
-    S(.60,{cy:.35,cp:-.08,hy:.02,rh:[-.27,.25,.13],rd:[.86,.22,.46]},2),     // …and is wound back
-    S(.66,{cy:0,cp:.1,hy:-.06,hz:.08,rh:[-.05,.3,.02],rd:[.2,.08,.98]},3),
-    S(.72,{cy:-.4,cp:.16,hy:-.1,hz:.14,sf:.2,rh:[.16,.32,.02],rd:[-.42,0,.9]}),
-    S(.76,SWEPT),S(.96,SWEPT),S(1.40,{},1)]},
+  // `charged`: the head kindles through the windup, rings as it settles, and the release stamps and shakes
+  heavy:{kind:'heavy',next:null,charged:true,wind:.60,act:.14,rec:.64,dmg:23,cost:25,lunge:4.0,stun:.6,kb:6.4,bs:34,chip:3,poise:.3,keys:[
+    S(.24,{cy:-.55,cp:-.03,hy:.02,rh:[-.2,.46,-.02],rd:[.16,.12,.98]},1),              // lifted to the shoulder…
+    S(.60,{cy:-.8,cp:-.1,hy:.04,hz:-.07,rh:[-.2,.7,-.15],rd:[.1,-.05,.99]},2),         // …and couched by the ear, drawn right back
+    S(.66,{cy:-.5,cp:.14,hy:-.06,hz:.12,sf:.2,rh:[-.14,.62,.12],rd:[.05,-.1,.99]},3),
+    S(.72,DRIVE),S(.96,DRIVE),S(1.40,{},1)]},
 };
 
 /* the war axe — two hewing cuts into a chop. It bites deepest of all on flesh,
