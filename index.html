@@ -91,8 +91,14 @@
   /* knight select */
   #title{overflow-y:auto;justify-content:safe center;padding:28px 16px}
   #title>*{flex-shrink:0}
-  #title h1{font-size:clamp(40px,6.4vw,88px)}
-  #title .tag{margin-bottom:20px}
+  #title h1{font-size:clamp(32px,6.4vw,88px);font-weight:700;line-height:1.15;text-transform:uppercase;
+    letter-spacing:.13em;text-indent:.13em;margin:0 0 26px;color:var(--gold);text-shadow:none;
+    filter:drop-shadow(0 2px 0 #50300f) drop-shadow(0 5px 6px #000)}
+  /* Static gold reflections: no font download, animation or extra canvas work. */
+  @supports (background-clip:text) or (-webkit-background-clip:text){
+    #title h1,button.home-button span{background:linear-gradient(180deg,#fff3c7 0%,#f4d78b 22%,#b6832f 47%,#80531d 50%,#fff0b5 54%,#d4a84f 72%,#92601f 100%);
+      background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  }
   #title{background:radial-gradient(ellipse at center,rgba(8,6,10,.08) 30%,rgba(4,3,5,.88))}
   .pick{display:flex;align-items:flex-start;justify-content:space-between;gap:26px;margin-bottom:16px;flex-wrap:wrap;width:100%;max-width:1240px}
   .side-pick{width:min(370px,100%);text-align:left;background:rgba(6,5,8,.55);border:1px solid rgba(140,111,51,.35);padding:14px 16px 6px}
@@ -113,8 +119,14 @@
   .vs{align-self:flex-start;margin-top:4px;font-size:28px;letter-spacing:.3em;text-indent:.3em;color:var(--gold);opacity:.85;text-shadow:0 2px 8px #000}
   button.link{background:none;border:none;font-size:11px;letter-spacing:.3em;opacity:.6;margin-top:12px;padding:6px 10px}
   button.link:hover{opacity:1;color:#fff}
+  button.home-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-width:174px;
+    margin-top:18px;padding:12px 28px;color:var(--gold);font-size:14px;letter-spacing:.28em;
+    border:1px solid #b18b48;background:linear-gradient(#30261a,#13100c 48%,#21190f);
+    box-shadow:inset 0 1px 0 #e8ca7d55,inset 0 -2px 0 #000,0 3px 12px #0008}
+  button.home-button:hover{border-color:#f4db9b;background:linear-gradient(#493820,#1e170e 48%,#332511)}
+  .home-button svg{width:20px;height:20px;flex:none;filter:drop-shadow(0 1px 0 #000)}
   #how .keys{max-width:640px}
-  @media(max-height:800px) and (min-width:901px){#title h1{font-size:48px}#title{padding:14px 16px}#title .tag{margin-bottom:12px}.bio{min-height:118px}.arena-pick{margin-bottom:12px}.diffs{margin-bottom:12px}}
+  @media(max-height:800px) and (min-width:901px){#title h1{font-size:48px;margin-bottom:18px}#title{padding:14px 16px}.bio{min-height:118px}.arena-pick{margin-bottom:12px}.diffs{margin-bottom:12px}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -149,7 +161,6 @@
 
 <div id="title" class="overlay">
   <h1>Duel Knights</h1>
-  <div class="tag">Steel by torchlight</div>
   <div class="pick">
     <div class="side-pick"><div class="pickLabel">Your knight</div><div class="cards" id="pCards"></div><div class="bio" id="pBio"></div></div>
     <div class="vs">vs</div>
@@ -199,7 +210,12 @@
     <button data-d="squire">Squire</button><button data-d="knight">Knight</button><button data-d="warlord">Warlord</button>
   </div>
   <button class="main" id="again">Fight again</button>
-  <button class="link" id="menu">Choose knights &amp; arena</button>
+  <button class="home-button" id="menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M4 21V9H2V3H6V6H10V3H14V6H18V3H22V9H20V21Z M10 21V16A2 2 0 0 1 14 16V21 M7 11V14 M17 11V14"/>
+    </svg>
+    <span>Home</span>
+  </button>
 </div>
 
 <div id="err"></div>

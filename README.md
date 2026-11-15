@@ -33,7 +33,7 @@ loads from a CDN, so you need to be online the first time.
 ## The arenas
 
 Choose a battleground beneath the knight cards; the scene previews your choice immediately.
-**Fight again** keeps your arena and knights. **Choose knights & arena** returns to selection.
+**Fight again** keeps your arena and knights. **Home** returns to selection.
 
 | Arena | Setting |
 |:--|:--|
