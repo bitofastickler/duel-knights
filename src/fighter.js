@@ -53,7 +53,15 @@ class Trail{
 
 /* ───────────────────────── fighter ───────────────────────── */
 const _q={hInv:new THREE.Quaternion(),cInv:new THREE.Quaternion(),all:new THREE.Quaternion(),d:new THREE.Quaternion(),f:new THREE.Quaternion(),
-  m:new THREE.Matrix4(),x:V(),y:V(),z:V(),t:V(),pole:V(),e:new THREE.Euler(0,0,0,'YXZ')};
+  m:new THREE.Matrix4(),x:V(),y:V(),z:V(),t:V(),pole:V(),e:new THREE.Euler(0,0,0,'YXZ'),
+  wq:new THREE.Quaternion(),wr:V(),wy:V(),g:V(),v:V()};
+const smooth=u=>{u=clamp(u,0,1);return u*u*(3-2*u);};
+/** where an elbow points. Low hands keep it down and back; as the hand rises past the shoulder it swings
+    out to the front, so a raised arm folds forward over the shoulder instead of bending behind the head. */
+const elbow=(pole,side,handY)=>{const k=smooth((handY-SH_R.y+.12)/.42);return pole.set(side*(.55+.25*k),-1+.9*k,-.35+1.05*k);};
+/* a two-handed weapon: the left hand takes the haft nearest this point in front of the chest (chest frame),
+   lets it slide between GRIP[0] and GRIP[1] from the right hand, and lets go when the haft is out of reach */
+const GRIP_AT=V(.15,.2,.34),GRIP=[.12,.55];
 export class Fighter{
   /** char: an entry from characters.js · look: optional overrides (used for mirror matches) */
   constructor(char,isPlayer,look={}){
@@ -85,12 +93,14 @@ export class Fighter{
     this.blocking=false;this.blockT=9;this.lastBlockDown=-9;this.parryOK=false;this.iframes=false;
     this.buf=null;this.bufT=0;this.swingHit=false;this.swingContact=false;this.chainLock=false;
     this.flP=0;this.flPv=0;this.flR=0;this.flRv=0;this.walk=0;this.t=0;this.stance=null;this.stepSide=0;this.victory=false;this.rest=false;
-    this.dodgeDir=V();this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
+    this.dodgeDir=V();this.roll=0;this.gripW=0;this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
     this.animate(0);this.root.updateMatrixWorld(true);this.readBlade();this.pBlade[0].copy(this.blade[0]);this.pBlade[1].copy(this.blade[1]);
   }
   get fwd(){return _q.t.set(Math.sin(this.yaw),0,Math.cos(this.yaw));}
   setClip(keys){this.clip={t:0,keys:[{t:0,p:this.pose.slice(),e:0},...keys]};}
-  setStance(n,t=.16){if(this.stance!==n){this.stance=n;this.setClip([{t,p:this.weapon.poses?.[n]||POSE[n],e:1}]);}}
+  /** a named pose, as this fighter's weapon holds it */
+  poseOf(n){return this.weapon.poses?.[n]||POSE[n];}
+  setStance(n,t=.16){if(this.stance!==n){this.stance=n;this.setClip([{t,p:this.poseOf(n),e:1}]);}}
   useStam(c){if(this.stam<=0){if(this.isPlayer)this.onStamFail();return false;}
     this.stam-=c;this.regenDelay=.85;if(this.stam<=0){this.stam=0;this.regenDelay=1.6;}return true;}
   startAttack(id){
@@ -105,16 +115,17 @@ export class Fighter{
     if(m>.25)this.dodgeDir.set(I.mx/m,0,I.mz/m);else this.dodgeDir.copy(this.fwd).multiplyScalar(-1);
     this.state='dodge';this.st=0;this.stDur=.44;this.blocking=false;this.lastBlockDown=this.t;this.stance=null;this.buf=null;
     const side=this.dodgeDir.x*Math.cos(this.yaw)-this.dodgeDir.z*Math.sin(this.yaw);
-    const dp=POSE.dodge.slice();dp[14]=-side*.35;
-    this.setClip([{t:.1,p:dp,e:2},{t:.3,p:dp,e:0},{t:.44,p:POSE.guard,e:1}]);
+    const dp=this.poseOf('dodge').slice();dp[14]=-side*.35;
+    this.setClip([{t:.1,p:dp,e:2},{t:.3,p:dp,e:0},{t:.44,p:this.poseOf('guard'),e:1}]);
     Snd.dodge();FX.dust(this.pos,3);this.emit('dodge');return true;
   }
   stun(kind,dur){
     this.state=kind;this.st=0;this.stDur=dur;this.blocking=false;this.lastBlockDown=this.t;this.stance=null;this.buf=null;this.atk=null;this.iframes=false;
-    if(kind==='hit'){const s=Math.random()<.5?1:-1;this.setClip([K(.08,{cy:s*.4,cp:-.26,hy:-.04,rh:[-.52,.2,.1],rd:[-.5,.5,.7],lh:[.4,.25,.2],ld:[.6,0,.8]},2),K(dur+.1,{})]);}
-    else if(kind==='parried')this.setClip([{t:.12,p:POSE.stagger,e:2},K(dur-.25,{cy:.36,cp:-.24,hy:-.08,rh:[-.62,.22,.0],rd:[-.8,.05,.6],lh:[.5,.2,.1],ld:[.9,0,.4]},0),K(dur,{})]);
-    else if(kind==='broken')this.setClip([{t:.12,p:POSE.broken,e:2},{t:dur-.25,p:POSE.broken,e:0},K(dur,{})]);
-    else this.setClip([K(.08,{cy:-.5,cp:-.15,rh:[-.55,.55,-.05],rd:[-.5,.8,-.2]},2),K(dur,{})]);
+    const G=(t,e=1)=>({t,p:this.poseOf('guard'),e}); // every stagger ends back in this weapon's guard
+    if(kind==='hit'){const s=Math.random()<.5?1:-1;this.setClip([K(.08,{cy:s*.4,cp:-.26,hy:-.04,rh:[-.52,.2,.1],rd:[-.5,.5,.7],lh:[.4,.25,.2],ld:[.6,0,.8]},2),G(dur+.1)]);}
+    else if(kind==='parried')this.setClip([{t:.12,p:POSE.stagger,e:2},K(dur-.25,{cy:.36,cp:-.24,hy:-.08,rh:[-.62,.22,.0],rd:[-.8,.05,.6],lh:[.5,.2,.1],ld:[.9,0,.4]},0),G(dur)]);
+    else if(kind==='broken')this.setClip([{t:.12,p:POSE.broken,e:2},{t:dur-.25,p:POSE.broken,e:0},G(dur)]);
+    else this.setClip([K(.08,{cy:-.5,cp:-.15,rh:[-.55,.55,-.05],rd:[-.5,.8,-.2]},2),G(dur)]);
   }
   turn(rate,dt){const d=angDiff(this.yaw,this.intent.face),m=rate*dt;this.yaw+=clamp(d,-m,m);}
   update(dt){
@@ -194,13 +205,27 @@ export class Fighter{
     // right arm → weapon
     Q.t.set(p[0],p[1],p[2]).applyQuaternion(Q.hInv).sub(CHEST_OFF).applyQuaternion(Q.cInv);
     Q.y.set(p[3],p[4],p[5]).normalize();Q.x.crossVectors(Q.y,UP);if(Q.x.lengthSq()<1e-4)Q.x.set(1,0,0);Q.x.normalize();Q.z.crossVectors(Q.x,Q.y);
+    if(this.weapon.edge){ // a one-edged weapon turns in the hand so its edge (the hand's −Z) leads the cut
+      let roll=0;const a=this.atk;
+      if(this.state==='attack'&&a){const st=this.st,v=Q.v.fromArray(a.swing);v.addScaledVector(Q.y,-v.dot(Q.y));
+        const w=st<a.wind?smooth((st/a.wind-.2)/.6):st<a.wind+a.act?1:1-smooth((st-a.wind-a.act)/(a.rec*.6));
+        if(v.lengthSq()>.04)roll=Math.atan2(v.dot(Q.x),-v.dot(Q.z))*w;}
+      this.roll=dt>0?damp(this.roll,roll,26,dt):roll;
+      const c=Math.cos(this.roll),sn=Math.sin(this.roll);Q.v.copy(Q.x);Q.x.multiplyScalar(c).addScaledVector(Q.z,sn);Q.z.multiplyScalar(c).addScaledVector(Q.v,-sn);
+    }
     Q.d.setFromRotationMatrix(Q.m.makeBasis(Q.x,Q.y,Q.z)).premultiply(Q.all);
-    ik2(b.uaR,b.faR,SH_R,Q.t,Q.pole.set(-.55,-1,-.35),UA,FA,Q.f);b.hR.quaternion.copy(Q.f).invert().multiply(Q.d);
-    // left arm → shield
+    Q.wr.copy(Q.t);Q.wq.copy(Q.d);Q.wy.copy(Q.y).applyQuaternion(Q.all); // the weapon in the chest's frame, for a second hand
+    ik2(b.uaR,b.faR,SH_R,Q.t,elbow(Q.pole,-1,Q.t.y),UA,FA,Q.f);b.hR.quaternion.copy(Q.f).invert().multiply(Q.d);
+    // left arm → shield, or the haft of a two-handed weapon
     Q.t.set(p[6],p[7],p[8]).applyQuaternion(Q.hInv).sub(CHEST_OFF).applyQuaternion(Q.cInv);
     Q.z.set(p[9],p[10],p[11]).normalize();Q.x.crossVectors(UP,Q.z).normalize();Q.y.crossVectors(Q.z,Q.x);
     Q.d.setFromRotationMatrix(Q.m.makeBasis(Q.x,Q.y,Q.z)).premultiply(Q.all);
-    ik2(b.uaL,b.faL,SH_L,Q.t,Q.pole.set(.6,-1,-.3),UA,FA,Q.f);b.hL.quaternion.copy(Q.f).invert().multiply(Q.d);
+    if(this.weapon.twoHanded){
+      const g=clamp(Q.g.copy(GRIP_AT).sub(Q.wr).dot(Q.wy),GRIP[0],GRIP[1]);Q.g.copy(Q.wr).addScaledVector(Q.wy,g);
+      const w=this.gripW=smooth((Q.g.distanceTo(SH_L)-(UA+FA)*.97)/.14); // 0 = holding the haft, 1 = let go (the pose's own left hand)
+      Q.t.lerpVectors(Q.g,Q.t,w);Q.d.slerpQuaternions(Q.wq,Q.d,w);
+    }
+    ik2(b.uaL,b.faL,SH_L,Q.t,elbow(Q.pole,1,Q.t.y),UA,FA,Q.f);b.hL.quaternion.copy(Q.f).invert().multiply(Q.d);
     // legs: planted stance + stride cycle
     const A_=.25*amp,dxl=sp>.01?lx/sp:0,dzl=sp>.01?lz/sp:0;
     for(let s=0;s<2;s++){

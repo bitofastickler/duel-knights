@@ -8,7 +8,7 @@ import {WEAPONS} from './weapons.js';
    Every knight shares one skeleton; the look options change the armour.
    o: steel, rough, trim, mail, cloth, blade (colours) · emblem · crest (fin colour)
       helm ('plume'|'horned'|'crest'|'great'|'sun'|'beak'|'boar') · mantle ('fur'|'feather': what lies over the shoulders)
-      shield ('heater'|'round'|'kite') · scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS)
+      shield ('heater'|'round'|'kite'|'none') · scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS)
       capeW, capeL (cape size; its design comes from the emblem, see CAPES in textures.js) */
 export const HIP_Y=.88, UA=.29, FA=.27, TH=.45, SHN=.43, ANKLE=.07;
 export const CHEST_OFF=V(0,.10,0), SH_R=V(-.25,.45,0), SH_L=V(.25,.45,0), HJ_L=V(.11,-.03,0), HJ_R=V(-.11,-.03,0);
@@ -169,18 +169,24 @@ export function buildKnight(o){
   };
   const lL=leg(1,HJ_L),lR=leg(-1,HJ_R);
   // weapon (grip along +Y of the hand)
-  const W=WEAPONS[o.weapon||'sword'].build({add,grp,cyl,box,sph,m},aR.hand);
-  // shield (faces +Z of the left hand)
-  const shield=grp(aL.hand,0,.02,.075);
-  const SK=SHIELDS[o.shield]||SHIELDS.heater,sh=SK.top-SK.bot,round=o.shield==='round';
-  const shp=new THREE.Shape();SK.draw(shp);shp.closePath();
-  const et=tex(emblemCanvas(o.emblem));et.repeat.set(1/SK.w,1/sh);et.offset.set(.5,-SK.bot/sh); // shape coordinates → the whole coat of arms
-  const face=new THREE.Mesh(new THREE.ShapeGeometry(shp,round?16:10),new THREE.MeshStandardMaterial({map:et,roughness:.55,metalness:.25,envMapIntensity:.6}));face.position.z=.033;face.castShadow=true;shield.add(face);
-  const body=add(new THREE.ExtrudeGeometry(shp,{depth:.03,bevelEnabled:false,curveSegments:round?16:10}),steel,shield);body.scale.set(1.05,1.05,1);body.position.y=round?-.0015:-.002;
-  if(round){add(new THREE.TorusGeometry(.292,.014,6,28),trim,shield,0,-.03,.03); // an iron rim and studs; no boss, so the arms stay whole
-    baked(shield,g=>{for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.39;add(sph(.014,6,5),steel,g,Math.sin(a)*.262,-.03+Math.cos(a)*.262,.036);}});}
-  else add(sph(.05,10,8),trim,shield,0,-.02,.035).scale.z=.6;
-  const shieldC=grp(shield,0,-.03,.02);
+  const arms=()=>new THREE.MeshStandardMaterial({map:tex(emblemCanvas(o.emblem)),roughness:.7,metalness:.1,envMapIntensity:.4});
+  const W=WEAPONS[o.weapon||'sword'].build({add,grp,cyl,box,sph,m,arms},aR.hand);
+  // shield (faces +Z of the left hand). shieldC is the centre of the guard that blows are tested against;
+  // a knight with no shield guards with the weapon itself, between the hands.
+  const shield=grp(aL.hand,0,.02,.075);let shieldC;
+  if(o.shield==='none')shieldC=grp(W.g,0,.3,0);
+  else{
+    const SK=SHIELDS[o.shield]||SHIELDS.heater,sh=SK.top-SK.bot,round=o.shield==='round';
+    const shp=new THREE.Shape();SK.draw(shp);shp.closePath();
+    const fm=arms();fm.roughness=.55;fm.metalness=.25;fm.envMapIntensity=.6;
+    fm.map.repeat.set(1/SK.w,1/sh);fm.map.offset.set(.5,-SK.bot/sh); // shape coordinates → the whole coat of arms
+    const face=new THREE.Mesh(new THREE.ShapeGeometry(shp,round?16:10),fm);face.position.z=.033;face.castShadow=true;shield.add(face);
+    const body=add(new THREE.ExtrudeGeometry(shp,{depth:.03,bevelEnabled:false,curveSegments:round?16:10}),steel,shield);body.scale.set(1.05,1.05,1);body.position.y=round?-.0015:-.002;
+    if(round){add(new THREE.TorusGeometry(.292,.014,6,28),trim,shield,0,-.03,.03); // an iron rim and studs; no boss, so the arms stay whole
+      baked(shield,g=>{for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.39;add(sph(.014,6,5),steel,g,Math.sin(a)*.262,-.03+Math.cos(a)*.262,.036);}});}
+    else add(sph(.05,10,8),trim,shield,0,-.02,.035).scale.z=.6;
+    shieldC=grp(shield,0,-.03,.02);
+  }
   const bones={root,hips,chest,head,cape,skirt,uaR:aR.ua,faR:aR.fa,hR:aR.hand,uaL:aL.ua,faL:aL.fa,hL:aL.hand,
     thL:lL.th,shL:lL.sh,ftL:lL.ft,thR:lR.th,shR:lR.sh,ftR:lR.ft,weapon:W.g,bBase:W.base,bTip:W.tip,shield,shieldC};
   // remember rest transforms so the ragdoll can be undone

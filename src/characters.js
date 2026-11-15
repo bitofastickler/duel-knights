@@ -64,8 +64,8 @@ export const ROSTER=[
   },
   {
     id:'corvin',name:'Corvin',title:'the Gallows Crow',
-    blurb:'Fights from behind a long spear. Three thrusts from beyond sword reach keep you off him; get inside the point and he has little to give.',
-    look:{steel:0x56608c,rough:.27,trim:0xc3c6d2,mail:0x262a3a,cloth:0x4c35a0,blade:0xd8dcec,emblem:'crow',helm:'beak',mantle:'feather',shield:'kite',bulk:.92,capeW:.44,capeL:.74,trailColor:0xc9a8ff},
+    blurb:'No shield: both hands on a long spear. Three thrusts from beyond sword reach and a scything sweep keep you off him; get inside the point and he has little to give.',
+    look:{steel:0x56608c,rough:.27,trim:0xc3c6d2,mail:0x262a3a,cloth:0x4c35a0,blade:0xd8dcec,emblem:'crow',helm:'beak',mantle:'feather',shield:'none',bulk:.92,capeW:.44,capeL:.74,trailColor:0xc9a8ff},
     alt:{cloth:0x7a1f30,trim:0xb8a06a,trailColor:0xffa8b8},
     weapon:'spear',
     stats:{hp:88,speed:3.65,dodgeCost:18,guard:1.1},

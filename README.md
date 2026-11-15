@@ -24,7 +24,7 @@ loads from a CDN, so you need to be online the first time.
 |:--|:--|
 | W A S D | Move. You face where the mouse aims |
 | Left click | Light attack. Swords, the spear and the axe chain three blows, the mace two |
-| Right click | Heavy overhead. Tap Space during the windup to feint |
+| Right click | Heavy attack. Tap Space during the windup to feint |
 | Space | Block. Raise it just before a blow lands to parry |
 | Shift | Dodge toward your movement keys |
 | Q | Focus (lock facing onto your foe) |
@@ -60,7 +60,7 @@ A direct link can preselect the arena: [enter Starfall Cloister](https://bitofas
 | **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
 | **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows |
-| **Corvin**, the Gallows Crow | Spear | Three thrusts from beyond sword reach. Fragile once you are inside the point |
+| **Corvin**, the Gallows Crow | Spear, in both hands | No shield. Three thrusts from beyond sword reach and a scything sweep. Fragile once you are inside the point |
 | **Sigrun**, the Red Tusk | War axe | All attack. Hits hardest of all, but short, costly, and weak against a raised shield |
 
 ![Brann swings his mace at Ysolde](assets/fight.jpg)
@@ -92,7 +92,7 @@ tests/browser.mjs   shared static-server / Playwright test harness
 
 Add an entry to `ROSTER` in `src/characters.js`. Anything you leave out of `stats` uses the
 defaults in `BASE_STATS` (`src/fighter.js`). A new coat of arms goes in `EMBLEMS` and its
-cape in `CAPES` (both in `src/textures.js`). The `look` picks a helm, a shield shape and what
+cape in `CAPES` (both in `src/textures.js`). The `look` picks a helm, a shield shape (or none) and what
 lies over the shoulders from the options listed at the top of `src/knight.js`. A new weapon is
 a model in `src/weapons.js` plus a moveset in `src/moves.js`. Then run the balance check.
 

@@ -2,7 +2,7 @@ import {rand,angDiff,segSeg,V} from './util.js';
 import {Snd} from './audio.js';
 import {FX} from './fx.js';
 import {Ragdoll} from './ragdoll.js';
-import {POSE,PARRY_WINDOW} from './moves.js';
+import {PARRY_WINDOW} from './moves.js';
 
 /* combat resolution. `game` supplies stats, callouts, the vignette and endRound(). */
 let game;
@@ -46,7 +46,7 @@ function resolveBlock(A,D,pt,atk){
   if(D.parryOK&&D.blockT<=PARRY_WINDOW){ // parry
     D.parryOK=false;D.stam=Math.min(D.maxSt,D.stam+20);D.regenDelay=0;game.stats.parries[si]++;
     A.stun('parried',heavy?1.1:.95);A.vel.copy(_dir).multiplyScalar(-3);A.flPv-=6;
-    D.setClip([{t:.07,p:POSE.parryPunch,e:2},{t:.3,p:POSE.block,e:1}]);D.stance='block';
+    D.setClip([{t:.07,p:D.poseOf('parryPunch'),e:2},{t:.3,p:D.poseOf('block'),e:1}]);D.stance='block';
     FX.sparks(pt,46,9,[3,2.4,1.2]);FX.burst(pt,40);FX.stop(.15);FX.slow(.35,.3);FX.shake(.5);FX.kick(3);
     Snd.parry();game.callout('Parry');return;
   }

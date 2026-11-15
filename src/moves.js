@@ -65,24 +65,37 @@ export const MACE={
   heavy:slow(maceHeavy,1.1,{dmg:30,cost:30,lunge:3.5,stun:.72,kb:6.8,bs:50,chip:5}),
 };
 
-/* the spear — all point. Three thrusts from well outside sword reach and an overhand stab.
+/* the spear — held in both hands, no shield: the right hand at the butt drives it, the haft slides through the left.
+   Three thrusts from well outside sword reach, then a scything sweep with the whole length of the haft.
    Light on stamina and it shoves the foe back, but each wound is small and a shield turns it easily. */
-const JAB={cy:.36,cp:.16,hy:-.08,hz:.16,sf:.22,rh:[-.10,.40,.56],rd:[.02,0,1]},
-  JAB2={cy:.38,cp:.13,hy:-.06,hz:.14,sf:.2,rh:[-.08,.52,.56],rd:[0,.05,1]},
-  LUNGE={cy:.5,cp:.26,hy:-.16,hz:.26,sf:.36,rh:[-.06,.36,.58],rd:[.02,-.02,1]},
-  STAB={cy:.4,cp:.38,hy:-.16,hz:.16,sf:.3,rh:[-.08,.5,.56],rd:[.02,-.5,.87]};
+const SG={cy:-.55,rh:[-.2,.1,0],rd:[.24,.32,.92]};                    // on guard: butt at the right hip, point at the foe's throat
+const S=(t,o={},e=0)=>({t,p:P({...SG,...o}),e});
+const JAB={cy:-.45,cp:.14,hy:-.08,hz:.16,sf:.22,rh:[-.1,.3,.28],rd:[.04,.04,1]},
+  JAB2={cy:-.45,cp:.12,hy:-.06,hz:.14,sf:.2,rh:[-.1,.4,.28],rd:[.02,.08,1]},
+  LUNGE={cy:-.4,cp:.26,hy:-.16,hz:.28,sf:.36,rh:[-.08,.3,.3],rd:[.03,0,1]},
+  SWEPT={cy:-.55,cp:.18,hy:-.12,hz:.16,sf:.25,rh:[.2,.32,.01],rd:[-.55,-.02,.84]};
+export const SPEAR_POSES={
+  guard:P(SG),
+  block:P({cy:-.3,cp:.06,hy:-.06,rh:[-.27,.26,.28],rd:[.86,.34,.38]}),       // the haft thrown across the body
+  parryPunch:P({cy:-.5,cp:.1,hy:-.05,rh:[-.26,.32,.4],rd:[.84,.3,.45]}),
+  dodge:P({cy:-.3,cp:.4,hy:-.24,rh:[-.2,.1,.04],rd:[.2,.26,.94]}),
+  // one-handed: planted upright at the side, the free hand open
+  taunt:P({cy:.1,cp:-.03,hy:.02,rh:[-.46,.12,.14],rd:[-.32,.9,.28],lh:[.38,.10,.12],ld:[.85,0,.5]}),
+  rest:P({cy:0,cp:0,rh:[-.42,.2,.12],rd:[-.05,1,.07],lh:[.3,.15,.22],ld:[.5,0,.86]}),
+};
 export const SPEAR={
   l1:{kind:'light',next:'l2',wind:.27,act:.10,rec:.40,dmg:7,cost:10,lunge:2.6,stun:.28,kb:3.0,bs:10,chip:0,keys:[
-    A(.27,{cy:-.5,hy:-.04,rh:[-.38,.36,-.06],rd:[.04,.06,1]},2),A(.33,JAB,3),A(.44,JAB),K(.77,{})]},
+    S(.27,{cy:-.8,hy:-.04,rh:[-.3,.16,-.2],rd:[.14,.16,.98]},2),S(.33,JAB,3),S(.44,JAB),S(.77,{},1)]},
   l2:{kind:'light',next:'l3',wind:.21,act:.10,rec:.42,dmg:8,cost:10,lunge:2.4,stun:.28,kb:3.0,bs:10,chip:0,keys:[
-    A(.21,{cy:-.45,hy:-.03,rh:[-.36,.48,-.02],rd:[.03,0,1]},2),A(.27,JAB2,3),A(.38,JAB2),K(.73,{})]},
+    S(.21,{cy:-.8,hy:-.03,rh:[-.3,.24,-.18],rd:[.12,.1,.99]},2),S(.27,JAB2,3),S(.38,JAB2),S(.73,{},1)]},
   l3:{kind:'light',next:null,wind:.30,act:.12,rec:.60,dmg:12,cost:13,lunge:3.6,stun:.36,kb:4.4,bs:14,chip:0,keys:[
-    A(.30,{cy:-.65,hy:-.08,rh:[-.38,.30,-.1],rd:[.05,.08,1]},2),A(.37,LUNGE,3),A(.56,LUNGE),K(1.02,{})]},
-  heavy:{kind:'heavy',next:null,wind:.60,act:.14,rec:.64,dmg:22,cost:25,lunge:3.6,stun:.58,kb:6.2,bs:34,chip:3,poise:.3,keys:[
-    A(.26,{cy:-.3,cp:-.06,rh:[-.36,.72,-.02],rd:[0,.5,.86]},1),
-    A(.60,{cy:-.5,cp:-.14,hy:.03,rh:[-.34,1.0,-.2],rd:[.02,-.2,.98]},2),   // couched overhead, point on the foe
-    A(.66,{cy:.1,cp:.2,hy:-.08,hz:.1,rh:[-.16,.8,.3],rd:[.02,-.38,.92]},3),
-    A(.72,STAB),A(.94,STAB),K(1.38,{})]},
+    S(.30,{cy:-.9,hy:-.1,rh:[-.3,.12,-.24],rd:[.14,.14,.98]},2),S(.37,LUNGE,3),S(.56,LUNGE),S(1.02,{},1)]},
+  heavy:{kind:'heavy',next:null,wind:.60,act:.14,rec:.64,dmg:22,cost:25,lunge:3.2,stun:.58,kb:6.2,bs:34,chip:3,poise:.3,keys:[
+    S(.26,{cy:.1,cp:-.04,rh:[-.26,.26,.12],rd:[.7,.2,.68]},1),               // the point swings out to the left…
+    S(.60,{cy:.35,cp:-.08,hy:.02,rh:[-.27,.25,.13],rd:[.86,.22,.46]},2),     // …and is wound back
+    S(.66,{cy:0,cp:.1,hy:-.06,hz:.08,rh:[-.05,.3,.02],rd:[.2,.08,.98]},3),
+    S(.72,{cy:-.4,cp:.16,hy:-.1,hz:.14,sf:.2,rh:[.16,.32,.02],rd:[-.42,0,.9]}),
+    S(.76,SWEPT),S(.96,SWEPT),S(1.40,{},1)]},
 };
 
 /* the war axe — two hewing cuts into a chop. It bites deepest of all on flesh,
@@ -99,10 +112,17 @@ export const AXE={
   heavy:slow(SWORD.heavy,1.04,{dmg:34,cost:27,lunge:3.3,stun:.66,kb:6,bs:40,chip:3}),
 };
 
+/** which way an attack's point travels while it can wound, in the knight's frame (for turning an edge into the cut) */
+function swingDir(a){
+  const tip=t=>{const k=a.keys;let i=1;while(i<k.length-1&&t>k[i].t)i++;const A=k[i-1].p,B=k[i].p,u=Math.min(1,Math.max(0,(t-k[i-1].t)/(k[i].t-k[i-1].t||1)));
+    const q=j=>A[j]+(B[j]-A[j])*u,l=Math.hypot(q(3),q(4),q(5))||1;return [q(0)+q(3)/l*.8,q(1)+q(4)/l*.8,q(2)+q(5)/l*.8];};
+  const p0=tip(a.wind),p1=tip(a.wind+a.act),d=[p1[0]-p0[0],p1[1]-p0[1],p1[2]-p0[2]],l=Math.hypot(...d)||1;
+  return d.map(v=>v/l);
+}
 /** a fighter's own copy of a moveset, scaled by their attack speed and damage */
 export function buildMoves(base,{atkSpeed=1,dmg=1,heavyDmg=1}={}){
   const out={},f=1/atkSpeed;
   for(const id in base){const a=base[id];
-    out[id]=slow(a,f,{dmg:a.dmg*dmg*(a.kind==='heavy'?heavyDmg:1)});}
+    out[id]=slow(a,f,{dmg:a.dmg*dmg*(a.kind==='heavy'?heavyDmg:1),swing:swingDir(a)});}
   return out;
 }
