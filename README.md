@@ -39,17 +39,22 @@ Choose a battleground beneath the knight cards; the scene previews your choice i
 |:--|:--|
 | **Ashen Courtyard** | The original firelit proving ground, with iron gates, castle walls and rival banners |
 | **Starfall Cloister** | A ruined mountaintop sanctuary: open gothic arches, a bronze astrolabe holding a fallen star, and an aurora above distant peaks |
+| **Wyrmfire Crucible** | A dragon-carved forge above a molten chasm, with lavafalls, glowing runic pillars and a bound ember in the wyrm's jaws |
 
 ![Starfall Cloister, with its turning star reliquary and firelit compass floor](assets/starfall.jpg)
 
-Both arenas use the same flat floor, fighting radius, spawns and rules. Scenery stays outside
-the combat area. Starfall uses instanced masonry, a single low-poly aurora ribbon and two
-shadow-casting braziers (the courtyard uses four). Only the active arena is loaded; switching
-releases its geometry, materials, textures and shadow maps. The sky and reflection map are
-shared, and adaptive quality stays in effect across switches. No new downloaded assets or
-postprocessing passes are needed.
+![Wyrmfire Crucible: the carved dragon and its bound ember overlook the bronze-inlaid dueling floor](assets/wyrmfire.jpg)
 
-A direct link can preselect the arena: [enter Starfall Cloister](https://bitofastickler.github.io/duel-knights/?arena=starfall).
+All three arenas use the same flat floor, fighting radius, spawns and rules. Scenery stays
+outside the combat area; the lava is decorative. Starfall and Wyrmfire use instanced scenery
+and two shadow-casting braziers (the courtyard uses four). Wyrmfire's six lavafalls share one
+scrolling texture, and its runes and dragon eyes glow without adding lights. Only the active
+arena is loaded; switching releases its geometry, materials, textures and shadow maps.
+The reflection map is shared, and adaptive quality stays in effect across switches. The
+live preview remains; no new downloaded assets or postprocessing passes are needed.
+
+Direct links can preselect [Starfall Cloister](https://bitofastickler.github.io/duel-knights/?arena=starfall)
+or [Wyrmfire Crucible](https://bitofastickler.github.io/duel-knights/?arena=wyrmfire).
 
 ## The knights
 
@@ -79,6 +84,7 @@ src/brain.js        the AI (difficulty settings + per-character style)
 src/knight.js       procedural knight model (helms, armour, mantles, shields)
 src/arena.js        arena switching, shared sky, courtyard, fire and embers
 src/starfall.js     Starfall Cloister scenery and ambient animation
+src/wyrmfire.js     Wyrmfire Crucible scenery and lavafall animation
 src/ragdoll.js      Verlet ragdoll for knockouts
 src/fx.js           sparks, dust, hit-stop, slow motion, camera shake
 src/audio.js        synthesised sound
@@ -104,11 +110,12 @@ For arena/UI changes, install Playwright and its Chromium browser, then run:
 node tests/arenas.mjs
 node tests/sim.mjs 1 courtyard
 node tests/sim.mjs 1 starfall
+node tests/sim.mjs 1 wyrmfire
 ```
 
 The arena check covers selection, keyboard operation, rematches, repeated switching, GPU
 resource counts, reduced-quality settings, small viewports and direct links. It compares
-render calls, triangles and shadow lights from the same camera; it does not claim a hardware
+render calls, triangles and shadow lights from three matching cameras; it does not claim a hardware
 FPS benchmark. Set `ARENA_SHOTS` to a directory to save menu screenshots.
 
 The harness also accepts `CHROMIUM_PATH`, `CHROMIUM_ARGS` (a JSON array), and `THREE_ROOT`
