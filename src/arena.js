@@ -3,11 +3,13 @@ import {rand,TAU,V} from './util.js';
 import {renderer,scene} from './render.js';
 import {cv,tex,softTex,groundCanvas,brickCanvas,bannerTex} from './textures.js';
 import {buildStarfall} from './starfall.js';
+import {buildWyrmfire} from './wyrmfire.js';
 
-/* Both arenas share the same level fighting floor and collision radius. */
+/* Every arena shares the same level fighting floor and collision radius. */
 export const ARENAS=[
-  {id:'courtyard',name:'Ashen Courtyard',tag:'The old proving ground',description:'Firelit stone. Iron gates. The banners of rival houses.'},
-  {id:'starfall',name:'Starfall Cloister',tag:'Where fallen stars are kept',description:'A ruined sanctuary above the clouds. An ancient star still turns.'},
+  {id:'courtyard',name:'Ashen Courtyard',tag:'The old proving ground',description:'Firelit stone. Iron gates. The banners of rival houses.',sigil:'♜',orbit:0,fog:0x0a0d18,density:.016,build:buildCourtyard},
+  {id:'starfall',name:'Starfall Cloister',tag:'Where fallen stars are kept',description:'A ruined sanctuary above the clouds. An ancient star still turns.',sigil:'✧',orbit:Math.PI+.25,fog:0x101b2a,density:.010,build:buildStarfall},
+  {id:'wyrmfire',name:'Wyrmfire Crucible',tag:'Beneath the sleeping wyrm',description:'A dragon-carved forge above a molten chasm. Ancient runes burn in the stone.',sigil:'♢',orbit:Math.PI+.16,fog:0x211119,density:.013,build:buildWyrmfire},
 ];
 let arena=null,activeId=null,animateArena=null,quality=2,skyBuilt=false;
 export const arenaId=()=>activeId;
@@ -33,13 +35,12 @@ export function setArenaQuality(level){
   fires.forEach((f,i)=>{if(f.light)f.light.castShadow=f.shadow&&level>0&&(level===2||i%2===0);});
 }
 export function buildArena(id='courtyard'){
-  id=ARENAS.some(a=>a.id===id)?id:'courtyard';
+  const definition=ARENAS.find(a=>a.id===id)||ARENAS[0];id=definition.id;
   if(id===activeId)return;
   if(!skyBuilt){buildSky();skyBuilt=true;}
   clearArena();arena=new THREE.Group();arena.name='arena:'+id;scene.add(arena);activeId=id;
-  scene.fog.color.setHex(id==='starfall'?0x101b2a:0x0a0d18);
-  scene.fog.density=id==='starfall'?.010:.016;
-  if(id==='starfall')animateArena=buildStarfall(arena,{addFire,addBanner});else buildCourtyard();
+  scene.fog.color.setHex(definition.fog);scene.fog.density=definition.density;
+  animateArena=definition.build(arena,{addFire,addBanner})||null;
   setArenaQuality(quality);
 }
 function addBanner(x,y,z,angle,slot){

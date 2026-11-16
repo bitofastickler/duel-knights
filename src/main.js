@@ -20,7 +20,7 @@ const pick=(id,fallback)=>CHARACTERS[id]?id:fallback;
 let player=null,enemy=null;
 
 const game={
-  phase:'title',paused:false,diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:arenaId()==='starfall'?Math.PI+.25:0,
+  phase:'title',paused:false,diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:ARENAS.find(a=>a.id===arenaId()).orbit,
   sel:{p:pick(params.get('p'),'caldwin'),e:pick(params.get('e'),'varkos'),arena:arenaId()},
   callout(t){ui.callout.textContent=t;ui.callout.classList.remove('go');void ui.callout.offsetWidth;ui.callout.classList.add('go');},
   banner(big,sub=''){ui.banner.children[0].textContent=big;ui.banner.children[1].textContent=sub;ui.banner.classList.toggle('on',!!big);},
@@ -91,7 +91,7 @@ function buildSelect(){
     el.addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;Snd.init();Snd.click();game.sel[side]=b.dataset.id;refreshSelect();});
   }
   $('#arenaCards').innerHTML=ARENAS.map(a=>`<button class="arena-card ${a.id}" data-arena="${a.id}" aria-pressed="false" aria-describedby="arenaDescription">
-    <span class="arena-sigil" aria-hidden="true">${a.id==='starfall'?'✧':'♜'}</span>
+    <span class="arena-sigil" aria-hidden="true">${a.sigil}</span>
     <span><small>${a.tag}</small><b>${a.name}</b></span><span class="arena-check" aria-hidden="true">✓</span></button>`).join('');
   $('#arenaCards').addEventListener('click',e=>{
     const b=e.target.closest('[data-arena]');if(!b)return;
@@ -101,7 +101,7 @@ function buildSelect(){
 }
 function selectArena(id){
   if(game.phase!=='title'||!ARENAS.some(a=>a.id===id))return;
-  game.sel.arena=id;game.orbit=id==='starfall'?Math.PI+.25:0;buildArena(id);setBannerEmblems(player.char.look.emblem,enemy.char.look.emblem);refreshArena();
+  game.sel.arena=id;game.orbit=ARENAS.find(a=>a.id===id).orbit;buildArena(id);setBannerEmblems(player.char.look.emblem,enemy.char.look.emblem);refreshArena();
 }
 function refreshArena(){
   const a=ARENAS.find(a=>a.id===game.sel.arena);
