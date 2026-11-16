@@ -62,6 +62,7 @@ const elbow=(pole,side,handY)=>{const k=smooth((handY-SH_R.y+.12)/.42);return po
 /* a two-handed weapon: the left hand takes the haft nearest this point in front of the chest (chest frame),
    lets it slide between GRIP[0] and GRIP[1] from the right hand, and lets go when the haft is out of reach */
 const GRIP_AT=V(.15,.2,.34),GRIP=[.12,.55];
+const EDGE_AXIS=V(1,0,0); // the axis an overhead chop turns about (the knight's left): the default for a one-edged weapon
 export class Fighter{
   /** char: an entry from characters.js · look: optional overrides (used for mirror matches) */
   constructor(char,isPlayer,look={}){
@@ -93,7 +94,7 @@ export class Fighter{
     this.blocking=false;this.blockT=9;this.lastBlockDown=-9;this.parryOK=false;this.iframes=false;
     this.buf=null;this.bufT=0;this.swingHit=false;this.swingContact=false;this.chainLock=false;
     this.flP=0;this.flPv=0;this.flR=0;this.flRv=0;this.walk=0;this.t=0;this.stance=null;this.stepSide=0;this.victory=false;this.rest=false;
-    this.dodgeDir=V();this.roll=0;this.gripW=0;this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
+    this.dodgeDir=V();this.edge=V(0,0,1);this.gripW=0;this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
     this.animate(0);this.root.updateMatrixWorld(true);this.readBlade();this.pBlade[0].copy(this.blade[0]);this.pBlade[1].copy(this.blade[1]);
   }
   get fwd(){return _q.t.set(Math.sin(this.yaw),0,Math.cos(this.yaw));}
@@ -209,13 +210,17 @@ export class Fighter{
     // right arm → weapon
     Q.t.set(p[0],p[1],p[2]).applyQuaternion(Q.hInv).sub(CHEST_OFF).applyQuaternion(Q.cInv);
     Q.y.set(p[3],p[4],p[5]).normalize();Q.x.crossVectors(Q.y,UP);if(Q.x.lengthSq()<1e-4)Q.x.set(1,0,0);Q.x.normalize();Q.z.crossVectors(Q.x,Q.y);
-    if(this.weapon.edge){ // a one-edged weapon turns in the hand so its edge (the hand's −Z) leads the cut
-      let roll=0;const a=this.atk;
-      if(this.state==='attack'&&a){const st=this.st,v=Q.v.fromArray(a.swing);v.addScaledVector(Q.y,-v.dot(Q.y));
-        const w=st<a.wind?smooth((st/a.wind-.2)/.6):st<a.wind+a.act?1:1-smooth((st-a.wind-a.act)/(a.rec*.6));
-        if(v.lengthSq()>.04)roll=Math.atan2(v.dot(Q.x),-v.dot(Q.z))*w;}
-      this.roll=dt>0?damp(this.roll,roll,26,dt):roll;
-      const c=Math.cos(this.roll),sn=Math.sin(this.roll);Q.v.copy(Q.x);Q.x.multiplyScalar(c).addScaledVector(Q.z,sn);Q.z.multiplyScalar(c).addScaledVector(Q.v,-sn);
+    if(this.weapon.edge){ // a one-edged head (built facing the hand's −Z) is aimed, not left to the frame above:
+      // that frame turns over whenever the weapon passes through vertical, which spun the head about its own haft.
+      // Instead the edge is carried from frame to frame and eased round the haft toward where it should lead:
+      // the way the head travels turning about the cut's own axis, or about the chop's axis when not cutting
+      // (so a raised axe already faces the foe). It never jumps, and holds still where that is undefined.
+      const a=this.atk,e=this.edge,cut=this.state==='attack'&&a&&a.axis&&this.st>a.wind*.15&&this.st<a.wind+a.act+a.rec*.35;
+      const want=Q.v.crossVectors(cut?Q.g.fromArray(a.axis):EDGE_AXIS,Q.y);
+      e.addScaledVector(Q.y,-e.dot(Q.y));if(e.lengthSq()<1e-6)e.copy(Q.z).negate();e.normalize();
+      if(want.lengthSq()>.03){want.normalize();const ang=Math.atan2(Q.g.crossVectors(e,want).dot(Q.y),e.dot(want));
+        e.applyAxisAngle(Q.y,dt>0?ang*(1-Math.exp(-16*dt)):ang);}
+      Q.z.copy(e).negate();Q.x.crossVectors(Q.y,Q.z);
     }
     Q.d.setFromRotationMatrix(Q.m.makeBasis(Q.x,Q.y,Q.z)).premultiply(Q.all);
     Q.wr.copy(Q.t);Q.wq.copy(Q.d);Q.wy.copy(Q.y).applyQuaternion(Q.all); // the weapon in the chest's frame, for a second hand

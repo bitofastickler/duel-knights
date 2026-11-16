@@ -114,17 +114,19 @@ export const AXE={
   heavy:slow(SWORD.heavy,1.04,{dmg:34,cost:27,lunge:3.3,stun:.66,kb:6,bs:40,chip:3}),
 };
 
-/** which way an attack's point travels while it can wound, in the knight's frame (for turning an edge into the cut) */
-function swingDir(a){
-  const tip=t=>{const k=a.keys;let i=1;while(i<k.length-1&&t>k[i].t)i++;const A=k[i-1].p,B=k[i].p,u=Math.min(1,Math.max(0,(t-k[i-1].t)/(k[i].t-k[i-1].t||1)));
-    const q=j=>A[j]+(B[j]-A[j])*u,l=Math.hypot(q(3),q(4),q(5))||1;return [q(0)+q(3)/l*.8,q(1)+q(4)/l*.8,q(2)+q(5)/l*.8];};
-  const p0=tip(a.wind),p1=tip(a.wind+a.act),d=[p1[0]-p0[0],p1[1]-p0[1],p1[2]-p0[2]],l=Math.hypot(...d)||1;
-  return d.map(v=>v/l);
+/** the axis an attack's weapon turns about while it can wound, in the knight's frame (null for a thrust).
+    A one-edged head is kept square to it, so the edge always leads the arc: see `edge` in weapons.js. */
+function swingAxis(a){
+  const dir=t=>{const k=a.keys;let i=1;while(i<k.length-1&&t>k[i].t)i++;const A=k[i-1].p,B=k[i].p,u=Math.min(1,Math.max(0,(t-k[i-1].t)/(k[i].t-k[i-1].t||1)));
+    const q=j=>A[j]+(B[j]-A[j])*u,l=Math.hypot(q(3),q(4),q(5))||1;return [q(3)/l,q(4)/l,q(5)/l];};
+  const X=(p,q)=>[p[1]*q[2]-p[2]*q[1],p[2]*q[0]-p[0]*q[2],p[0]*q[1]-p[1]*q[0]];
+  const d0=dir(a.wind-.02),dm=dir(a.wind+a.act/2),d1=dir(a.wind+a.act+.02),n=X(d0,dm).map((v,i)=>v+X(dm,d1)[i]),l=Math.hypot(...n);
+  return l>.15?n.map(v=>v/l):null;
 }
 /** a fighter's own copy of a moveset, scaled by their attack speed and damage */
 export function buildMoves(base,{atkSpeed=1,dmg=1,heavyDmg=1}={}){
   const out={},f=1/atkSpeed;
   for(const id in base){const a=base[id];
-    out[id]=slow(a,f,{dmg:a.dmg*dmg*(a.kind==='heavy'?heavyDmg:1),swing:swingDir(a)});}
+    out[id]=slow(a,f,{dmg:a.dmg*dmg*(a.kind==='heavy'?heavyDmg:1),axis:swingAxis(a)});}
   return out;
 }
