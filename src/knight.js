@@ -64,7 +64,8 @@ export function buildKnight(o){
   const arc=(rt,rb,h,half,sz)=>{const g=new THREE.CylinderGeometry(rt,rb,h,8,1,true,-half,half*2);g.scale(1,1,sz);return g;};
   // front skirt, hinged at the belt; animate() swings it forward with the thighs
   const skirtM=coat.clone();skirtM.map=tex(tabardCanvas(o,false)); // the skirt carries the pale but not the cross-bar
-  const skirt=grp(hips,0,-.035,0);{const g=arc(.205,.24,.34,.56,.78);g.translate(0,-.17,0);add(g,skirtM,skirt).castShadow=true;}
+  // The hinge runs along the skirt's own top edge at the front: hinged at the middle of the hips, the waistband rose into the breastplate as the skirt swung.
+  const SKZ=.205*.78,skirt=grp(hips,0,-.035,SKZ);{const g=arc(.205,.24,.34,.56,.78);g.translate(0,-.17,-SKZ);add(g,skirtM,skirt).castShadow=true;}
   // faulds: curved hip plates (flat ones mirrored the braziers as a glaring rectangle)
   for(const sd of [1,-1]){const g=new THREE.CylinderGeometry(.214,.236,.22,7,1,true,sd*Math.PI/2-.6,1.2);g.scale(1,1,.76);add(g,steel,hips,0,-.09,0);}
   // torso: one barrel-chested breastplate turned from a single profile, with a soft keel down the middle.
@@ -76,7 +77,7 @@ export function buildKnight(o){
     const g=new THREE.LatheGeometry(pts,segs,phi0,phiLen),P=g.attributes.position;
     for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),c=Math.max(0,z/Math.hypot(x,z)||0);
       const along=Math.min(1,Math.max(0,(y+.03)/.12))*Math.min(1,Math.max(0,(.5-y)/.1)); // the keel fades out at belt and collar
-      P.setZ(i,z*.74+.022*c**8*along);}
+      P.setZ(i,z*(z<0?.68:.74)+.022*c**8*along);}  // a flatter back, so the cape hangs clear of it
     g.computeVertexNormals();return g;};
   add(torso(0,1,0,Math.PI*2,22),steel,chest);
   add(torso(.012,.42,-.42,.84,8),coat,chest);                           // surcoat front
@@ -153,7 +154,7 @@ export function buildKnight(o){
   const CW=o.capeW||.42,CL=o.capeL||.78;
   const capeG=new THREE.PlaneGeometry(CW,CL,4,9);capeG.translate(0,-CL/2,0);
   const capeMat=new THREE.MeshStandardMaterial({map:tex(capeCanvas(o)),alphaTest:.5,roughness:.85,metalness:0,envMapIntensity:.3,side:THREE.DoubleSide});
-  const cape=new THREE.Mesh(capeG,capeMat);cape.position.set(0,.47,-.165);cape.castShadow=true;chest.add(cape);
+  const cape=new THREE.Mesh(capeG,capeMat);cape.position.set(0,.47,-.172);cape.castShadow=true;chest.add(cape);
   // arms
   const arm=(s,SH)=>{
     const ua=grp(chest,SH.x,SH.y,SH.z);
