@@ -67,10 +67,19 @@ export function buildKnight(o){
   const skirt=grp(hips,0,-.035,0);{const g=arc(.205,.24,.34,.56,.78);g.translate(0,-.17,0);add(g,skirtM,skirt).castShadow=true;}
   // faulds: curved hip plates (flat ones mirrored the braziers as a glaring rectangle)
   for(const sd of [1,-1]){const g=new THREE.CylinderGeometry(.214,.236,.22,7,1,true,sd*Math.PI/2-.6,1.2);g.scale(1,1,.76);add(g,steel,hips,0,-.09,0);}
-  // torso
-  add(cyl(.235,.195,.44,14),steel,chest,0,.2,0).scale.z=.72;
-  add(sph(.2),steel,chest,0,.33,.015).scale.set(1.25,.8,.78);
-  add(arc(.25,.228,.44,.42,.72),coat,chest,0,.19,0);                    // surcoat front
+  // torso: one barrel-chested breastplate turned from a single profile, with a soft keel down the middle.
+  // (It used to be a squashed sphere on a cylinder: either side of the surcoat it read as two mounds.)
+  // The surcoat is turned from the same profile, a little further out, so it lies on the plate.
+  const TORSO=new THREE.SplineCurve([[.197,-.03],[.206,.06],[.222,.15],[.238,.25],[.244,.32],[.236,.39],[.205,.45],[.135,.505]].map(([x,y])=>new THREE.Vector2(x,y)));
+  const torso=(off,top,phi0,phiLen,segs)=>{
+    const pts=TORSO.getSpacedPoints(24).filter(p=>p.y<=top).map(p=>new THREE.Vector2(p.x+off,p.y));
+    const g=new THREE.LatheGeometry(pts,segs,phi0,phiLen),P=g.attributes.position;
+    for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i),c=Math.max(0,z/Math.hypot(x,z)||0);
+      const along=Math.min(1,Math.max(0,(y+.03)/.12))*Math.min(1,Math.max(0,(.5-y)/.1)); // the keel fades out at belt and collar
+      P.setZ(i,z*.74+.022*c**8*along);}
+    g.computeVertexNormals();return g;};
+  add(torso(0,1,0,Math.PI*2,22),steel,chest);
+  add(torso(.012,.42,-.42,.84,8),coat,chest);                           // surcoat front
   add(cyl(.232,.232,.06,14),leather,chest,0,-.01,0).scale.z=.75;add(box(.06,.07,.03),trim,chest,0,-.01,.177); // belt over it
   add(cyl(.1,.135,.09,10),steel,chest,0,.5,0);
   // neck: a mail column from the gorget up into the helm, with a standing collar around its base.
