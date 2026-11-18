@@ -9,6 +9,10 @@ import {SWORD,MACE,SPEAR,SPEAR_POSES,AXE} from './moves.js';
    Optional: `poses` replaces stances from POSE (moves.js) that do not suit the weapon;
    `twoHanded` puts the left hand on the haft (pair it with the look's shield:'none');
    `edge` marks a one-edged head, built facing the hand's −Z, that turns to lead each cut.
+   `crowd` keeps a long haft out of a foe who closes in (see Fighter.crowd): the haft from `from` to `len`
+   (metres ahead of the hand) is kept `gap` clear of the foe by drawing it back up to `slide` through the hands
+   and turning the point up to `turn` radians aside, each turn radian weighed as `turnCost` metres of slide;
+   `give` and `ease` are how fast (per second) it gives way and comes back.
    build() also gets `arms()`, a material painted with the knight's coat of arms. */
 export const WEAPONS={
   sword:{name:'Longsword',moves:SWORD,radius:0,reach:1,blunt:false,
@@ -34,6 +38,7 @@ export const WEAPONS={
       return {g,base:grp(g,0,.42,0),tip:grp(g,0,.88,0)};
     }},
   spear:{name:'Spear',moves:SPEAR,radius:.012,reach:1.3,blunt:false,twoHanded:true,poses:SPEAR_POSES,
+    crowd:{from:.3,len:1.8,slide:.8,gap:.04,turn:.9,turnCost:1,give:30,ease:10},
     build({add,grp,cyl,box,m,arms},hand){
       const g=grp(hand);                                                  // gripped near the butt: two metres of ash ahead of the hand
       add(cyl(.015,.017,1.66,8),m.leather,g,0,.61,0);                     // haft

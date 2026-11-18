@@ -62,6 +62,12 @@ const elbow=(pole,side,handY)=>{const k=smooth((handY-SH_R.y+.12)/.42);return po
 /* a two-handed weapon: the left hand takes the haft nearest this point in front of the chest (chest frame),
    lets it slide between GRIP[0] and GRIP[1] from the right hand, and lets go when the haft is out of reach */
 const GRIP_AT=V(.15,.2,.34),GRIP=[.12,.55];
+const _crowd=Array.from({length:11},()=>({a:[0,0,0],b:[0,0,0],r:0})),_cw=V();
+/** distance from a point to a capsule's core segment {a,b} (plain arrays) */
+function capDist(x,y,z,c){
+  const a=c.a,b=c.b,ex=b[0]-a[0],ey=b[1]-a[1],ez=b[2]-a[2],L=ex*ex+ey*ey+ez*ez,px=x-a[0],py=y-a[1],pz=z-a[2];
+  const t=L>1e-9?clamp((px*ex+py*ey+pz*ez)/L,0,1):0;return Math.hypot(px-ex*t,py-ey*t,pz-ez*t);
+}
 const EDGE_AXIS=V(1,0,0); // the axis an overhead chop turns about (the knight's left): the default for a one-edged weapon
 export class Fighter{
   /** char: an entry from characters.js · look: optional overrides (used for mirror matches) */
@@ -71,7 +77,7 @@ export class Fighter{
     this.weapon=WEAPONS[char.weapon];this.wr=this.weapon.radius;this.reach=this.weapon.reach*(L.scale||1);
     this.stats={...BASE_STATS,...char.stats};this.maxHp=this.stats.hp;this.maxSt=this.stats.stam;
     this.moves=buildMoves(this.weapon.moves,this.stats);
-    this.b=buildKnight({...L,weapon:char.weapon});this.root=this.b.root;
+    this.b=buildKnight({...L,weapon:char.weapon});this.root=this.b.root;this.guardY=this.b.shieldC.position.y;
     this.pos=this.root.position;this.vel=V();this.yaw=0;this.seed=rand(10);
     this.pose=P();this.clip={t:0,keys:[{t:0,p:P(),e:0},{t:0,p:P(),e:0}]};
     this.intent={mx:0,mz:0,face:0,block:false,blockPressed:false,light:false,heavy:false,dodge:false,taunt:false};
@@ -94,7 +100,7 @@ export class Fighter{
     this.blocking=false;this.blockT=9;this.lastBlockDown=-9;this.parryOK=false;this.iframes=false;
     this.buf=null;this.bufT=0;this.swingHit=false;this.swingContact=false;this.chainLock=false;
     this.flP=0;this.flPv=0;this.flR=0;this.flRv=0;this.walk=0;this.t=0;this.stance=null;this.stepSide=0;this.victory=false;this.rest=false;
-    this.dodgeDir=V();this.edge=V(0,0,1);this.gripW=0;this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
+    this.dodgeDir=V();this.edge=V(0,0,1);this.gripW=0;this.crowdS=this.crowdA=0;this.trail.str.fill(0);this.setStance('guard',.01);this.clip.t=1;
     this.animate(0);this.root.updateMatrixWorld(true);this.readBlade();this.pBlade[0].copy(this.blade[0]);this.pBlade[1].copy(this.blade[1]);
   }
   get fwd(){return _q.t.set(Math.sin(this.yaw),0,Math.cos(this.yaw));}
@@ -189,12 +195,43 @@ export class Fighter{
     const r=Math.hypot(this.pos.x,this.pos.z);if(r>ARENA_R){this.pos.x*=ARENA_R/r;this.pos.z*=ARENA_R/r;}
     this.root.rotation.y=this.yaw;
   }
+  /** a long haft never rests inside the foe: as they close in it is drawn back through the hands, and when that
+      is not enough its point is turned aside past them. Only a landing thrust runs it into a body: while a blow
+      can wound it is let out to its full length, so close-in thrusts still reach. Edits the pose's weapon aim. */
+  crowd(dt){
+    const C=this.weapon.crowd,o=this.other,p=this.pose,b=this.b,sc=this.root.scale.x;
+    let slide=0,turn=0;const striking=this.state==='attack'&&this.phase==='active';
+    if(o&&o.state!=='dead'&&!o.ragdoll&&!striking){
+      // the foe's body (as last drawn) in this knight's frame, from the hips; the haft is a ray from the right hand
+      const sn=Math.sin(this.yaw),cs=Math.cos(this.yaw),hx=p[0],hy=HIP_Y+p[15]+p[1],hz=p[16]+p[2],caps=_crowd;let n=0;
+      const put=(w,c)=>{const x=(w.x-this.pos.x)/sc,z=(w.z-this.pos.z)/sc;c[0]=x*cs-z*sn-hx;c[1]=w.y/sc-hy;c[2]=x*sn+z*cs-hz;};
+      for(const v of o.volumes()){const c=caps[n++];put(v.a,c.a);put(v.b,c.b);c.r=v.r/sc+C.gap;}
+      if(o.b.shieldC.parent!==o.b.weapon){const c=caps[n++];o.b.shieldC.getWorldPosition(_cw);put(_cw,c.a);put(_cw,c.b);c.r=.3*o.root.scale.x/sc+C.gap;}
+      const l=Math.hypot(p[3],p[4],p[5])||1,ux=p[3]/l,uy=p[4]/l,uz=p[5]/l;
+      /** how far the haft must be drawn back to stay out of the foe, with its point turned by a about the vertical */
+      const need=a=>{
+        const c=Math.cos(a),s=Math.sin(a),vx=ux*c+uz*s,vz=uz*c-ux*s;
+        for(let t=C.from;t<=C.len;t+=.06){const x=vx*t,y=uy*t,z=vz*t;
+          for(let i=0;i<n;i++)if(capDist(x,y,z,caps[i])<caps[i].r)return C.len-t+.06;}
+        return 0;
+      };
+      let best=Infinity; // the least drawn back and turned aside, keeping to the side it is already on
+      for(let i=-9;i<=9;i++){const a=i/9*C.turn,s=need(a);
+        const cost=(s<=C.slide?s:9+s)+(Math.abs(a)+Math.abs(a-this.crowdA)*.5)*C.turnCost;if(cost<best){best=cost;slide=Math.min(s,C.slide);turn=a;}}
+    }
+    // it gives way quickly and comes back unhurried; a thrust lets it out at once
+    const k=(cur,want)=>striking?30:Math.abs(want)>Math.abs(cur)?C.give:C.ease;
+    this.crowdS=damp(this.crowdS,slide,k(this.crowdS,slide),dt);this.crowdA=damp(this.crowdA,turn,k(this.crowdA,turn),dt);
+    const a=this.crowdA,c=Math.cos(a),s=Math.sin(a),x=p[3],z=p[5];p[3]=x*c+z*s;p[5]=z*c-x*s;
+    b.weapon.position.y=-this.crowdS;if(b.shieldC.parent===b.weapon)b.shieldC.position.y=this.guardY+this.crowdS; // the guard stays between the hands
+  }
   /** evaluate the pose clip and drive every bone */
   animate(dt){
     const c=this.clip,k=c.keys,p=this.pose,b=this.b;c.t+=dt;
     let i=1;while(i<k.length-1&&c.t>k[i].t)i++;
     const ka=k[i-1],kb=k[i];let u=kb.t>ka.t?clamp((c.t-ka.t)/(kb.t-ka.t),0,1):1;u=EASE[kb.e](u);
     for(let j=0;j<18;j++)p[j]=ka.p[j]+(kb.p[j]-ka.p[j])*u;
+    if(this.weapon.crowd)this.crowd(dt);
     // flinch springs
     this.flPv+=(-this.flP*150-this.flPv*13)*dt;this.flP+=this.flPv*dt;this.flRv+=(-this.flR*150-this.flRv*13)*dt;this.flR+=this.flRv*dt;
     const sn=Math.sin(this.yaw),cs=Math.cos(this.yaw),lz=this.vel.x*sn+this.vel.z*cs,lx=this.vel.x*cs-this.vel.z*sn,sp=Math.hypot(lx,lz);
