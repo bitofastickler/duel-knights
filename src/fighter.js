@@ -76,7 +76,7 @@ export class Fighter{
     const L={...char.look,...look};
     this.weapon=WEAPONS[char.weapon];this.wr=this.weapon.radius;this.reach=this.weapon.reach*(L.scale||1);
     this.stats={...BASE_STATS,...char.stats};this.maxHp=this.stats.hp;this.maxSt=this.stats.stam;
-    this.moves=buildMoves(this.weapon.moves,this.stats);
+    this.moves=buildMoves({...this.weapon.moves,...char.moves},this.stats);
     this.b=buildKnight({...L,weapon:char.weapon});this.root=this.b.root;this.guardY=this.b.shieldC.position.y;
     this.pos=this.root.position;this.vel=V();this.yaw=0;this.seed=rand(10);
     this.pose=P();this.clip={t:0,keys:[{t:0,p:P(),e:0},{t:0,p:P(),e:0}]};
@@ -170,7 +170,7 @@ export class Fighter{
         else{this.vel.x=damp(this.vel.x,0,9,dt);this.vel.z=damp(this.vel.z,0,9,dt);}
         if(prev==='wind'&&this.phase==='active'){
           if(a.charged){Snd.drive();FX.dust(this.pos,5);FX.shake(.22);FX.kick(2.5);} // the stamp of the leading foot
-          else Snd.swing(a.kind==='heavy',this.weapon.blunt);}
+          else Snd.swing(a.kind==='heavy',a.blunt??this.weapon.blunt);}
         if(prev==='active'&&this.phase==='recover'&&!this.swingContact)this.emit('whiff',a.kind);
         const tot=a.wind+a.act+a.rec+(this.chainLock?.14:0);
         if(this.phase==='recover'){

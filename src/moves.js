@@ -24,7 +24,9 @@ export const PARRY_WINDOW=.2;
 /* An attack: wind/act/rec phase lengths (s), dmg, stamina cost, lunge speed,
    stun on hit, knockback, bs = stamina it drains from a blocker,
    chip = health it takes through a block, poise = time after which a heavy shrugs off light hits.
-   Optional `charged`: a showpiece blow (see the spear's heavy). */
+   Optional `charged`: a showpiece blow (see the spear's heavy).
+   Optional `shield`: the blow is struck with the shield, not the weapon: it wounds where the shield's centre
+   comes within `radius` of the foe, and lands as a `blunt` blow whatever the knight carries. */
 
 /* the longsword — a three-cut chain and an overhead */
 export const SWORD={
@@ -113,6 +115,48 @@ export const AXE={
     A(.45,CHOP),A(.60,CHOP),K(.97,{})]},
   heavy:slow(SWORD.heavy,1.04,{dmg:34,cost:27,lunge:3.3,stun:.66,kb:6,bs:40,chip:3}),
 };
+
+/* ───────────────────────── blows of a knight's own ─────────────────────────
+   A knight may trade single attacks of their weapon's moveset for these: see `moves` in characters.js.
+   `name` and `tip` are shown beside the knight on the select screen. */
+
+/* Varkos: the overhead hoisted further back and held a breath longer, then dropped with his whole weight.
+   Slow to arrive and plain to see, but two of them caught on a shield break most guards. */
+const SPLIT={cy:.2,cp:.52,hy:-.24,hz:.16,sf:.34,rh:[-.08,.16,.50],rd:[.04,-.6,.8]};
+export const CROWNSPLITTER={name:'Crownsplitter',tip:'slow to fall, but two on your shield will break it',
+  kind:'heavy',next:null,wind:.70,act:.14,rec:.60,dmg:30,cost:27,lunge:3.2,stun:.70,kb:6.6,bs:58,chip:6,poise:.34,keys:[
+    A(.30,{cy:-.35,cp:-.1,rh:[-.34,.8,-.04],rd:[-.2,.9,-.38]},1),
+    A(.70,{cy:-.34,cp:-.34,hy:.05,hz:-.05,rh:[-.26,1.1,-.26],rd:[-.1,.3,-.95]},2),
+    A(.76,{cy:0,cp:.1,rh:[-.2,1.02,.3],rd:[0,.75,.66]},3),
+    A(.80,{cy:.1,cp:.34,hy:-.12,hz:.1,rh:[-.12,.62,.54],rd:[0,.12,.99]}),
+    A(.84,SPLIT),A(1.04,SPLIT),K(1.44,{})]};
+
+/* Ysolde: her third cut is a lunge from low down that carries her twice as far as a longsword's thrust.
+   It catches a foe who backs off, and leaves her stretched out in front of one who steps aside. */
+const LONG={cy:.5,cp:.3,hy:-.24,hz:.36,sf:.5,rh:[-.06,.40,.62],rd:[.02,.02,1]};
+export const LONG_THORN={name:'The Long Thorn',tip:'a low lunge that crosses twice the ground',
+  kind:'light',next:null,wind:.26,act:.14,rec:.60,dmg:15,cost:14,lunge:5.6,stun:.36,kb:3.2,bs:15,chip:0,keys:[
+    A(.26,{cy:-.7,hy:-.14,hz:-.08,rh:[-.38,.30,-.08],rd:[.06,.06,1]},2),
+    A(.34,LONG,3),A(.52,LONG),K(1.00,{})]};
+
+/* Oriel: two cuts, then the shield itself, driven in behind her shoulder. It wounds little, but it throws
+   the foe back out of reach, and caught on a guard it costs them twice what a sword's third blow would. */
+const SLAM={cy:-.8,cp:.2,hy:-.1,hz:.22,sf:.34,lh:[-.02,.44,.74],ld:[-.1,.08,1],rh:[-.44,.2,-.1],rd:[.1,.9,.3]};
+export const DAYBREAK={name:'Daybreak',tip:'her shield, driven in to hurl you back and empty your guard',
+  kind:'light',next:null,shield:true,radius:.25,blunt:true,wind:.26,act:.12,rec:.46,dmg:9,cost:13,lunge:5.2,stun:.52,kb:6.5,bs:34,chip:0,keys:[
+    K(.26,{cy:.3,cp:-.04,hy:-.08,hz:-.05,lh:[.2,.36,.22],ld:[.3,.05,.95],rh:[-.44,.22,-.02],rd:[-.1,.9,.4]},2),
+    K(.33,SLAM,3),K(.50,SLAM,0),K(.84,{})]};
+
+/* Sigrun: in place of the overhead, the axe hauled round behind her and hewn flat across at chest height.
+   It is in the air a little longer and covers the ground to either side. */
+export const BOARS_SWEEP={name:'Boar\u2019s Sweep',tip:'a flat hew that covers the ground to either side',
+  kind:'heavy',next:null,wind:.64,act:.17,rec:.64,dmg:34,cost:28,lunge:3.3,stun:.66,kb:6.4,bs:40,chip:3,poise:.31,keys:[
+    A(.28,{cy:-.6,cp:-.04,rh:[-.52,.52,-.1],rd:[-.6,.7,-.4]},1),
+    A(.64,{cy:-1.0,cp:-.06,hy:-.05,hz:-.04,rh:[-.56,.46,-.3],rd:[-.62,.22,-.75]},2),
+    A(.70,{cy:-.3,cp:.08,hy:-.08,rh:[-.38,.42,.34],rd:[-.75,.02,.66]},3),
+    A(.755,{cy:.3,cp:.14,hy:-.1,hz:.1,sf:.2,rh:[-.02,.40,.56],rd:[.1,-.02,.99]}),
+    A(.81,{cy:.8,cp:.18,hy:-.12,hz:.12,sf:.26,rh:[.28,.34,.36],rd:[.84,-.1,.53]}),
+    A(.98,{cy:.9,cp:.18,hy:-.12,hz:.12,sf:.26,rh:[.34,.30,.26],rd:[.92,-.14,.36]},2),K(1.45,{})]};
 
 /** the axis an attack's weapon turns about while it can wound, in the knight's frame (null for a thrust).
     A one-edged head is kept square to it, so the edge always leads the arc: see `edge` in weapons.js. */

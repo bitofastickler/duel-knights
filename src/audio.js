@@ -2,12 +2,13 @@ import {rand,params} from './util.js';
 
 /* all sound is synthesised with Web Audio — no files */
 export const Snd=(()=>{
-  let ctx,master,wet,nbuf,muted=false,crackT=0,beatT=0,beat=0,failT=-Infinity;
+  let ctx,master,wet,nbuf,muted=false,vol=1,crackT=0,beatT=0,beat=0,failT=-Infinity;
+  const level=()=>{if(master)master.gain.value=muted?0:.85*vol;};
   function init(){
     if(params.has('silent'))return; // tests: no audio graph at all
     if(ctx){ctx.resume();return;}
     try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;}
-    master=ctx.createGain();master.gain.value=muted?0:.85;
+    master=ctx.createGain();level();
     const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);
     wet=ctx.createGain();wet.gain.value=.4;
     const dl=ctx.createDelay(.5);dl.delayTime.value=.137;const fb=ctx.createGain();fb.gain.value=.34;
@@ -45,7 +46,10 @@ export const Snd=(()=>{
   const metal=(f,dur,vol,echo)=>{[1,2.76,5.4,8.93,11.3].forEach((m,i)=>tone(f*m*(1+rand(-.01,.01)),f*m,dur/(1+i*.45),vol/(1+i*.7),i%2?'triangle':'sine',echo));};
   return {
     init,
-    toggle(){muted=!muted;if(master)master.gain.value=muted?0:.85;return muted;},
+    toggle(){muted=!muted;level();return muted;},
+    /** overall loudness, 0–1, and whether sound is off (both come from the saved settings) */
+    volume(v){vol=v;level();},
+    mute(m){muted=m;level();},
     swing(h,blunt){
       if(blunt)noise(h?.42:.28,'bandpass',h?160:260,h?700:1100,1.1,h?.4:.26);
       else noise(h?.34:.2,'bandpass',h?260:520,h?1500:2400,1.4,h?.34:.2);},

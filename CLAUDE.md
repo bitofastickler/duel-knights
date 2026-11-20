@@ -10,7 +10,8 @@
   the run fails on a page error or a match that never ends. Use `20`+ matches when tuning balance.
 - For visual changes, take screenshots with Playwright. With `?debug`, `window.__duel.cam(pos, look)`
   pins the camera; add `&silent` to skip audio.
+- `node tests/save.mjs` covers saved data, the settings screen and the pause menu.
 
 ## Code map
 See the README's "Project layout". Knights are data in `src/characters.js`; weapons in
-`src/weapons.js`; attack timings in `src/moves.js`; capes and heraldry in `src/textures.js`.
+`src/weapons.js`; attack timings in `src/moves.js`; capes and heraldry in `src/textures.js`; saved data in `src/save.js`.

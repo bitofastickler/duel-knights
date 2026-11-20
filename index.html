@@ -129,6 +129,19 @@
   button.home-button:hover{border-color:#f4db9b;background:linear-gradient(#493820,#1e170e 48%,#332511)}
   .home-button svg{width:20px;height:20px;flex:none;filter:drop-shadow(0 1px 0 #000)}
   #how .keys{max-width:640px}
+  #how .note{max-width:700px}
+  .bio .own{font-size:11px;letter-spacing:.05em;line-height:1.5;opacity:.85;margin:0 0 9px;padding-left:9px;border-left:1px solid var(--gold2)}
+  .bio .own b{display:block;font-weight:normal;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+  .links{display:flex;gap:6px;justify-content:center}
+  #settings,#how{background:radial-gradient(ellipse at center,rgba(10,8,12,.94),rgba(4,3,5,.98))} /* opened over another menu: hide it */
+  #pause button.link{margin-top:8px}
+  .opts{display:grid;grid-template-columns:auto minmax(150px,260px) 64px;gap:20px 20px;align-items:center;text-align:left;font-size:12px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:30px}
+  .opts output{color:var(--gold);letter-spacing:.1em}
+  .opts .diffs{margin:0;gap:8px;grid-column:2/4;flex-wrap:wrap}
+  .opts .diffs button{padding:8px 12px;letter-spacing:.16em;font-size:12px}
+  input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer}
+  input[type=range]:focus-visible{outline:2px solid #ecdaac;outline-offset:6px}
+  @media(max-width:520px){.opts{grid-template-columns:1fr 64px}.opts label,.opts>span{grid-column:1/3;margin-bottom:-12px}.opts .diffs{grid-column:1/3}}
   @media(max-height:800px) and (min-width:901px){#title h1{font-size:48px;margin-bottom:18px}#title{padding:14px 16px}.bio{min-height:118px}.arena-pick{margin-bottom:12px}.diffs{margin-bottom:12px}}
 </style>
 <script type="importmap">
@@ -178,7 +191,7 @@
     <button data-d="squire">Squire</button><button data-d="knight">Knight</button><button data-d="warlord">Warlord</button>
   </div>
   <button class="main" id="begin">Enter the ring</button>
-  <button class="link" id="howBtn">How to fight</button>
+  <div class="links"><button class="link" id="howBtn">How to fight</button><button class="link" id="setBtn">Settings</button></div>
 </div>
 
 <div id="how" class="overlay hidden">
@@ -196,13 +209,17 @@
   </div>
   <div class="note" style="margin:0 0 24px">Every action costs stamina — an empty bar breaks your guard. Weapons only wound what they actually touch.<br>
     A mace drains your guard fast and its blows bleed through the shield: dodge it, or parry it.<br>
+    Some knights have a blow of their own in place of a usual one; it is named beside their arms when you choose them.<br>
     A spear thrusts from beyond sword reach, so step inside the point. When its head starts to glow, the long thrust is coming. An axe hits hardest of all, but a raised shield shrugs it off.</div>
   <button class="main" id="howBack">Back</button>
 </div>
 
 <div id="pause" class="overlay hidden">
   <h1 style="font-size:60px">Paused</h1>
-  <div class="tag">Click to return to the ring</div>
+  <div class="tag">The ring waits</div>
+  <button class="main" id="resume">Return to the ring</button>
+  <button class="link" id="pauseSet">Settings</button>
+  <button class="link" id="quit">Leave the fight</button>
 </div>
 
 <div id="end" class="overlay hidden">
@@ -220,6 +237,24 @@
     </svg>
     <span>Home</span>
   </button>
+</div>
+
+<div id="settings" class="overlay hidden">
+  <h1 style="font-size:clamp(36px,5vw,64px)">Settings</h1>
+  <div class="tag">Kept in this browser</div>
+  <div class="rule"></div>
+  <div class="opts">
+    <label for="optVol">Volume</label><input type="range" id="optVol" min="0" max="100" step="5"><output id="optVolOut" for="optVol"></output>
+    <label for="optSens">Mouse speed</label><input type="range" id="optSens" min="40" max="200" step="10"><output id="optSensOut" for="optSens"></output>
+    <span id="optGfxLabel">Graphics</span>
+    <div class="diffs" id="optGfx" role="group" aria-labelledby="optGfxLabel">
+      <button data-q="auto">Auto</button><button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button>
+    </div>
+  </div>
+  <div class="note" style="margin:0 0 24px">Auto starts at full detail and lowers it by itself if the picture begins to stutter.<br>
+    Your settings, your last picks and each knight's record are remembered between visits.</div>
+  <button class="main" id="setBack">Back</button>
+  <button class="link" id="wipe">Erase saved data</button>
 </div>
 
 <div id="err"></div>

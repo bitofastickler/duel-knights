@@ -28,7 +28,11 @@ loads from a CDN, so you need to be online the first time.
 | Space | Block. Raise it just before a blow lands to parry |
 | Shift | Dodge toward your movement keys |
 | Q | Focus (lock facing onto your foe) |
-| P / M | Pause / mute |
+| P / M | Pause (resume, settings, or leave the fight) / mute |
+
+**Settings** (from the home screen or the pause menu) has volume, mouse speed and graphics detail.
+The game remembers them in the browser, along with your last knights, arena and difficulty and each
+knight's won/lost record. **Erase saved data** on the settings screen clears all of it.
 
 ## The arenas
 
@@ -61,12 +65,12 @@ or [Wyrmfire Crucible](https://bitofastickler.github.io/duel-knights/?arena=wyrm
 | Knight | Weapon | Style |
 |:--|:--|:--|
 | **Ser Caldwin**, the Azure | Longsword | The baseline. Three-cut combo, even stats |
-| **Varkos**, the Ashen King | Longsword | Bigger, sturdier guard, harder overheads, a step slower |
-| **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health |
+| **Varkos**, the Ashen King | Longsword | Bigger, sturdier guard, a step slower. His heavy is the *Crownsplitter*: a slower overhead, and two of them on a shield break most guards |
+| **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health. Her third cut is *The Long Thorn*: a low lunge that crosses twice the ground |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
-| **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows |
+| **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows. Her third blow is *Daybreak*: the shield itself, which wounds little but hurls the foe back and empties a guard |
 | **Corvin**, the Gallows Crow | Spear, in both hands | No shield. Three thrusts from beyond sword reach; the heavy is a charged thrust driven down from a high guard. Fragile once you are inside the point |
-| **Sigrun**, the Red Tusk | War axe | All attack. Hits hardest of all, but short, costly, and weak against a raised shield |
+| **Sigrun**, the Red Tusk | War axe | All attack. Hits hardest of all, but short, costly, and weak against a raised shield. Her heavy is the *Boar's Sweep*: a flat hew that covers the ground to either side |
 
 ![Brann swings his mace at Ysolde](assets/fight.jpg)
 
@@ -89,8 +93,10 @@ src/ragdoll.js      Verlet ragdoll for knockouts
 src/fx.js           sparks, dust, hit-stop, slow motion, camera shake
 src/audio.js        synthesised sound
 src/textures.js     procedural textures and heraldry
+src/save.js         what the game remembers between visits: settings, picks, match record
 tests/sim.mjs       AI-vs-AI smoke test and balance table
 tests/arenas.mjs    arena UI, resource cleanup and render-budget checks
+tests/save.mjs      saving, the settings screen and the pause menu
 tests/browser.mjs   shared static-server / Playwright test harness
 ```
 
@@ -100,7 +106,9 @@ Add an entry to `ROSTER` in `src/characters.js`. Anything you leave out of `stat
 defaults in `BASE_STATS` (`src/fighter.js`). A new coat of arms goes in `EMBLEMS` and its
 cape in `CAPES` (both in `src/textures.js`). The `look` picks a helm, a shield shape (or none) and what
 lies over the shoulders from the options listed at the top of `src/knight.js`. A new weapon is
-a model in `src/weapons.js` plus a moveset in `src/moves.js`. Then run the balance check.
+a model in `src/weapons.js` plus a moveset in `src/moves.js`. To give a knight a blow of their own, write
+the attack in `src/moves.js` (see "blows of a knight's own") and name it in the knight's `moves`, by the
+slot it replaces. Then run the balance check.
 
 ## Checks
 
@@ -112,6 +120,14 @@ node tests/sim.mjs 1 courtyard
 node tests/sim.mjs 1 starfall
 node tests/sim.mjs 1 wyrmfire
 ```
+
+For anything that touches saved data, the settings screen or the pause menu:
+
+```bash
+node tests/save.mjs
+```
+
+A new saved value needs only a default in `fresh()` in `src/save.js`.
 
 The arena check covers selection, keyboard operation, rematches, repeated switching, GPU
 resource counts, reduced-quality settings, small viewports and direct links. It compares

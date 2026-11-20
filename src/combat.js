@@ -9,18 +9,19 @@ let game;
 export function initCombat(g){game=g;}
 
 const _hp=V(),_hq=V(),_dir=V(),_a=V(),_b=V();
+const isBlunt=(A,atk)=>atk.blunt??A.weapon.blunt; // a shield blow is blunt whatever the weapon
 const inFront=(D,A)=>Math.abs(angDiff(D.yaw,Math.atan2(A.pos.x-D.pos.x,A.pos.z-D.pos.z)))<1.4;
 const side=f=>f.isPlayer?0:1;
 
 function kill(D,A,dir,atk){
   D.hp=0;D.state='dead';D.blocking=false;D.iframes=false;D.atk=null;
-  D.ragdoll=new Ragdoll(D,dir,(atk.kind==='heavy'?6.5:4.2)*(A.weapon.blunt?1.15:1));
+  D.ragdoll=new Ragdoll(D,dir,(atk.kind==='heavy'?6.5:4.2)*(isBlunt(A,atk)?1.15:1));
   FX.stop(.2);FX.slow(1.5,.22);FX.shake(.8);FX.kick(7);
   game.endRound(A);
 }
 function resolveHit(A,D,pt,atk){
   A.swingHit=A.swingContact=true;
-  const open=D.state==='parried'||D.state==='broken',heavy=atk.kind==='heavy',blunt=A.weapon.blunt;
+  const open=D.state==='parried'||D.state==='broken',heavy=atk.kind==='heavy',blunt=isBlunt(A,atk);
   const dmg=atk.dmg*(open?A.stats.riposte:1)*(inFront(D,A)?1:1.15);
   D.hp-=dmg;D.ghostT=.5;D.regenDelay=Math.max(D.regenDelay,.5);
   const si=side(A);game.stats.hits[si]++;game.stats.dmg[si]+=Math.min(dmg,D.hp+dmg);
@@ -41,7 +42,7 @@ function resolveHit(A,D,pt,atk){
   if(!poised){D.stun('hit',atk.stun+(open?.05:0));D.vel.copy(_dir).multiplyScalar(atk.kb);}
 }
 function resolveBlock(A,D,pt,atk){
-  A.swingHit=A.swingContact=true;const heavy=atk.kind==='heavy',si=side(D),blunt=A.weapon.blunt;
+  A.swingHit=A.swingContact=true;const heavy=atk.kind==='heavy',si=side(D),blunt=isBlunt(A,atk);
   _dir.subVectors(D.pos,A.pos).setY(0).normalize();
   if(D.parryOK&&D.blockT<=PARRY_WINDOW){ // parry
     D.parryOK=false;D.stam=Math.min(D.maxSt,D.stam+20);D.regenDelay=0;game.stats.parries[si]++;
@@ -66,12 +67,15 @@ function clash(A,D,pt){
   A.stun('clash',.4);D.stun('clash',.4);A.vel.copy(_dir).multiplyScalar(-3.2);D.vel.copy(_dir).multiplyScalar(3.2);
   FX.sparks(pt,40,8,[3,2.2,1]);FX.burst(pt,34);FX.stop(.11);FX.shake(.45);Snd.clang(1.3);game.callout('Clash');
 }
-/** sweep the attacker's weapon from last step to this one against the defender's body */
+/** sweep the attacker's weapon from last step to this one against the defender's body.
+    A shield blow tests the shield's centre as a ball instead (it moves too little in a step to need sweeping). */
 export function sweep(A,D){
   if(A.state!=='attack'||A.phase!=='active'||A.swingHit||D.state==='dead')return;
-  const vols=D.volumes(),SUB=4,wr=A.wr;
+  const vols=D.volumes(),bash=A.atk.shield,SUB=bash?1:4,wr=bash?A.atk.radius*A.root.scale.x:A.wr;
   for(let s=1;s<=SUB;s++){
-    const k=s/SUB;_a.lerpVectors(A.pBlade[0],A.blade[0],k);_b.lerpVectors(A.pBlade[1],A.blade[1],k);
+    const k=s/SUB;
+    if(bash){A.b.shieldC.getWorldPosition(_a);_b.copy(_a);}
+    else{_a.lerpVectors(A.pBlade[0],A.blade[0],k);_b.lerpVectors(A.pBlade[1],A.blade[1],k);}
     if(D.state==='attack'&&D.phase==='active'&&!D.swingHit&&segSeg(_a,_b,D.blade[0],D.blade[1],_hp,_hq)<.07+wr+D.wr){clash(A,D,_hp.clone());return;}
     if(D.iframes)continue;
     if(D.blocking&&inFront(D,A)){

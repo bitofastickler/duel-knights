@@ -1,7 +1,10 @@
+import {CROWNSPLITTER,LONG_THORN,DAYBREAK,BOARS_SWEEP} from './moves.js';
+
 /* ───────────────────────── the roster ─────────────────────────
    Add a knight by adding an entry here. Fields:
      look    armour colours and shape (see knight.js) — alt is used when both sides pick the same knight
      weapon  a key into WEAPONS (weapons.js)
+     moves   optional: attacks of the knight's own that replace the weapon's, by slot (l1, l2, l3, heavy); see moves.js
      stats   overrides of BASE_STATS (fighter.js); anything left out stays at the default
      ai      overrides of the AI's plan weights (brain.js): circle, pressure, heavy, feint, bait
      rating  1–5 pips shown on the select screen (display only)
@@ -23,7 +26,7 @@ export const ROSTER=[
     blurb:'Broad and patient. His overheads land harder and his guard barely gives.',
     look:{steel:0x2c2c33,rough:.38,trim:0x9a6b2a,mail:0x1c1c20,cloth:0x7a1210,blade:0xb8b0aa,emblem:'ashen',helm:'horned',scale:1.06,capeL:.84,trailColor:0xff9a70},
     alt:{cloth:0x3a3a44,trim:0x8a8f99,trailColor:0xc0c8ff},
-    weapon:'sword',
+    weapon:'sword',moves:{heavy:CROWNSPLITTER},
     stats:{hp:104,speed:3.4,atkSpeed:.96,heavyDmg:1.08,guard:.86},
     ai:{heavy:.55,feint:.45,pressure:1.1},
     rating:{health:4,power:4,speed:2,guard:4},
@@ -34,7 +37,7 @@ export const ROSTER=[
     blurb:'Quick cuts, cheap dodges, and a riposte that punishes every mistake. She cannot take much.',
     look:{steel:0xb6bbb4,rough:.28,trim:0xa7b2ae,mail:0x3a403a,cloth:0x1f5a34,blade:0xe8ecef,emblem:'thorn',helm:'crest',crest:0x2e9a52,scale:.96,bulk:.85,capeW:.38,capeL:.64,trailColor:0x9dffc0},
     alt:{cloth:0x5a1f4e,crest:0x9a2e86,trailColor:0xffa0e8},
-    weapon:'sword',
+    weapon:'sword',moves:{l3:LONG_THORN},
     stats:{hp:86,stam:110,speed:3.9,regen:36,dodgeCost:15,dodgeSpeed:9.4,atkSpeed:1.1,dmg:.85,riposte:1.5},
     ai:{pressure:1.6,bait:.8,heavy:.15,circle:.9},
     rating:{health:2,power:2,speed:5,guard:2},
@@ -56,7 +59,7 @@ export const ROSTER=[
     blurb:'Tireless behind her shield. She hits lightly, but her guard outlasts yours and her riposte is the hardest in the ring.',
     look:{steel:0xd9d5c8,rough:.22,trim:0xe2b13c,mail:0x8d8873,cloth:0xe4d9bd,blade:0xf4ecd0,emblem:'sun',helm:'sun',capeW:.44,capeL:.82,trailColor:0xffe9a8},
     alt:{cloth:0x9db4d6,trim:0xc8ccd4,trailColor:0xc8e0ff},
-    weapon:'sword',
+    weapon:'sword',moves:{l3:DAYBREAK},
     stats:{hp:98,stam:116,regen:36,dmg:.93,guard:.88,riposte:1.6},
     ai:{circle:1,pressure:1.05,bait:.9,heavy:.25},
     rating:{health:3,power:2,speed:3,guard:5},
@@ -78,7 +81,7 @@ export const ROSTER=[
     blurb:'All attack. Her war axe bites deeper than any blade, but it is short, tiring to swing, and she is easy to hit back.',
     look:{steel:0x868a8c,rough:.52,trim:0x34343a,mail:0x45423d,cloth:0xb8491a,blade:0xb9bbb8,emblem:'boar',helm:'boar',mantle:'fur',shield:'round',scale:1.02,bulk:1.1,capeW:.46,capeL:.58,trailColor:0xffa860},
     alt:{cloth:0x2c5d6c,trailColor:0xa0e8ff},
-    weapon:'axe',
+    weapon:'axe',moves:{heavy:BOARS_SWEEP},
     stats:{hp:102,speed:3.65,guard:1.05},
     ai:{pressure:1.7,heavy:.5,circle:.5,bait:.2,feint:.3},
     rating:{health:3,power:5,speed:3,guard:1},

@@ -9,8 +9,9 @@ import {WEAPONS} from './weapons.js';
 import {DIFF,Brain} from './brain.js';
 import {ROSTER,CHARACTERS} from './characters.js';
 import {initCombat,sweep} from './combat.js';
+import {Save} from './save.js';
 
-buildArena(params.get('arena'));buildEmbers();
+buildArena(params.get('arena')||Save.data.sel.arena);buildEmbers(); // a link's choice wins over the remembered one
 
 const ui={hud:$('#hud'),pHp:$('#pHp'),pGhost:$('#pGhost'),pSt:$('#pSt'),eHp:$('#eHp'),eGhost:$('#eGhost'),eSt:$('#eSt'),pStBar:$('#pStBar'),
   callout:$('#callout'),banner:$('#banner'),round:$('#roundLabel'),vig:$('#vig'),focus:$('#focus'),help:$('#help'),pName:$('#pName'),eName:$('#eName'),arena:$('#arenaLabel')};
@@ -20,8 +21,8 @@ const pick=(id,fallback)=>CHARACTERS[id]?id:fallback;
 let player=null,enemy=null;
 
 const game={
-  phase:'title',paused:false,diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:ARENAS.find(a=>a.id===arenaId()).orbit,
-  sel:{p:pick(params.get('p'),'caldwin'),e:pick(params.get('e'),'varkos'),arena:arenaId()},
+  phase:'title',paused:false,diff:DIFF[Save.data.diff]?Save.data.diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:ARENAS.find(a=>a.id===arenaId()).orbit,
+  sel:{p:pick(params.get('p'),pick(Save.data.sel.p,'caldwin')),e:pick(params.get('e'),pick(Save.data.sel.e,'varkos')),arena:arenaId()},
   callout(t){ui.callout.textContent=t;ui.callout.classList.remove('go');void ui.callout.offsetWidth;ui.callout.classList.add('go');},
   banner(big,sub=''){ui.banner.children[0].textContent=big;ui.banner.children[1].textContent=sub;ui.banner.classList.toggle('on',!!big);},
   stamFail(){Snd.fail();ui.pStBar.classList.remove('fail');void ui.pStBar.offsetWidth;ui.pStBar.classList.add('fail');},
@@ -51,7 +52,7 @@ const game={
     $('#endTitle').textContent=win?'Victory':'Defeat';$('#endSub').textContent=win?L.fall:L.win;
     const s=this.stats;$('#stats').innerHTML=[['Rounds won',this.score],['Blows landed',s.hits],['Parries',s.parries],['Blocks',s.blocks],['Damage dealt',s.dmg.map(Math.round)]]
       .map(([n,v])=>`<span>${v[0]}</span><span>${n}</span><span>${v[1]}</span>`).join('');
-    syncDiffButtons();
+    Save.result(player.char.id,win);syncDiffButtons();
     $('#end').classList.remove('hidden');ui.hud.classList.add('off');this.banner('');
     if(document.pointerLockElement)document.exitPointerLock();Snd.horn(win);
   },
@@ -60,7 +61,7 @@ const game={
     this.phase='title';setPause(false);this.banner('');
     $('#end').classList.add('hidden');ui.hud.classList.add('off');$('#title').classList.remove('hidden');
     if(document.pointerLockElement)document.exitPointerLock();
-    makeFighters();placeForTitle();
+    refreshSelect(); // stands the picks at the centre again, and shows the record with the match just fought
   },
   onEvent(src,type,data){const o=src.other;if(o.brain)o.brain.notify(type,data);},
 };
@@ -88,14 +89,14 @@ function buildSelect(){
   for(const [side,el] of [['p',$('#pCards')],['e',$('#eCards')]]){
     el.innerHTML=ROSTER.map(c=>{const label=`${c.name}, ${c.title} (${WEAPONS[c.weapon].name})`;
       return `<button class="card" data-id="${c.id}" title="${label}" aria-label="${label}"><img alt="" src="${emblemCanvas(c.look.emblem).toDataURL()}"></button>`;}).join('');
-    el.addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;Snd.init();Snd.click();game.sel[side]=b.dataset.id;refreshSelect();});
+    el.addEventListener('click',e=>{const b=e.target.closest('.card');if(!b)return;Snd.init();Snd.click();game.sel[side]=b.dataset.id;refreshSelect();remember();});
   }
   $('#arenaCards').innerHTML=ARENAS.map(a=>`<button class="arena-card ${a.id}" data-arena="${a.id}" aria-pressed="false" aria-describedby="arenaDescription">
     <span class="arena-sigil" aria-hidden="true">${a.sigil}</span>
     <span><small>${a.tag}</small><b>${a.name}</b></span><span class="arena-check" aria-hidden="true">✓</span></button>`).join('');
   $('#arenaCards').addEventListener('click',e=>{
     const b=e.target.closest('[data-arena]');if(!b)return;
-    Snd.init();Snd.click();selectArena(b.dataset.arena);
+    Snd.init();Snd.click();selectArena(b.dataset.arena);remember();
   });
   refreshArena();refreshSelect();
 }
@@ -108,11 +109,16 @@ function refreshArena(){
   document.querySelectorAll('[data-arena]').forEach(b=>{const on=b.dataset.arena===a.id;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
   $('#arenaDescription').textContent=a.description;ui.arena.textContent=a.name;
 }
+/** keep the picks and the difficulty for the next visit */
+function remember(){Object.assign(Save.data.sel,game.sel);Save.data.diff=game.diff;Save.write();}
+const SLOT={l1:'First light blow',l2:'Second light blow',l3:'Third light blow',heavy:'Heavy attack'};
 function refreshSelect(){
   for(const side of ['p','e']){
     document.querySelectorAll(`#${side}Cards .card`).forEach(b=>{const on=b.dataset.id===game.sel[side];b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
-    const c=CHARACTERS[game.sel[side]],r=c.rating;
-    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><div class="arm">${WEAPONS[c.weapon].name}</div><p>${c.blurb}</p>
+    const c=CHARACTERS[game.sel[side]],r=c.rating,rec=side==='p'&&Save.data.record[c.id];
+    // a blow of the knight's own, in place of one of the weapon's usual attacks
+    const own=Object.entries(c.moves||{}).map(([slot,m])=>`<div class="own"><b>${m.name}</b>${SLOT[slot]} · ${m.tip}</div>`).join('');
+    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><div class="arm">${WEAPONS[c.weapon].name}${rec?` · won ${rec.w}, lost ${rec.l}`:''}</div><p>${c.blurb}</p>${own}
       <div class="meters"><span>Health</span>${pips(r.health)}<span>Power</span>${pips(r.power)}<span>Speed</span>${pips(r.speed)}<span>Guard</span>${pips(r.guard)}</div>`;
   }
   if(game.phase==='title'){makeFighters();placeForTitle();}
@@ -131,11 +137,44 @@ document.addEventListener('pointerlockchange',()=>{
   if(was&&!inp.locked&&(game.phase==='fight'||game.phase==='intro'||game.phase==='roundEnd'))setPause(true);
 });
 document.addEventListener('pointerlockerror',()=>{inp.noLock=true;});
-function setPause(p){game.paused=p;$('#pause').classList.toggle('hidden',!p);}
-$('#pause').addEventListener('click',()=>{setPause(false);tryLock();});
+function setPause(p){game.paused=p;$('#pause').classList.toggle('hidden',!p);if(!p)showSettings(false);}
+$('#resume').addEventListener('click',()=>{Snd.click();setPause(false);tryLock();});
+$('#quit').addEventListener('click',()=>{Snd.click();game.toTitle();});
+
+/* ── settings ── kept in the save, applied here. Reached from the title screen and from the pause menu. */
+const QUALITY={high:2,medium:1,low:0},S=Save.data.settings;
+const isOpen=id=>!$(id).classList.contains('hidden');
+function showSettings(on){$('#settings').classList.toggle('hidden',!on);if(on){disarm();$('#setBack').focus();}}
+const disarm=()=>{const w=$('#wipe');delete w.dataset.sure;w.textContent='Erase saved data';}; // the erase button, back to asking first
+/** a fixed level, or 'auto': start at full detail and let the frame-rate watch in frame() lower it */
+function setQuality(name){
+  autoQ=!(name in QUALITY);applyQuality(autoQ?2:QUALITY[name]);fpsAcc=fpsN=0;
+  document.querySelectorAll('#optGfx button').forEach(b=>{const on=b.dataset.q===(autoQ?'auto':name);b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
+}
+function applyQuality(q){
+  quality=q;gfx.pixelRatio=q===2?Math.min(devicePixelRatio||1,2):1;renderer.setPixelRatio(gfx.pixelRatio);gfx.composer&&gfx.composer.setPixelRatio(gfx.pixelRatio);
+  gfx.bloomOn=!!gfx.composer&&q>0;setArenaQuality(q);
+}
+function syncSettings(){
+  Snd.volume(S.volume);Snd.mute(S.muted);
+  $('#optVol').value=Math.round(S.volume*100);$('#optVolOut').textContent=S.muted?'Muted':Math.round(S.volume*100)+'%';
+  $('#optSens').value=Math.round(S.sens*100);$('#optSensOut').textContent=Math.round(S.sens*100)+'%';
+}
+function toggleMute(){S.muted=!S.muted;syncSettings();Save.write();}
+$('#optVol').addEventListener('input',e=>{S.volume=clamp(e.target.value/100,0,1);S.muted=false;syncSettings();Save.write();});
+$('#optVol').addEventListener('change',()=>{Snd.init();Snd.clang(.8);}); // let go of the slider: hear the new level
+$('#optSens').addEventListener('input',e=>{S.sens=clamp(e.target.value/100,.4,2);syncSettings();Save.write();});
+$('#optGfx').addEventListener('click',e=>{const q=e.target.dataset.q;if(!q)return;Snd.init();Snd.click();S.quality=q;setQuality(q);Save.write();});
+for(const id of ['#setBtn','#pauseSet'])$(id).addEventListener('click',()=>{Snd.init();Snd.click();showSettings(true);});
+$('#setBack').addEventListener('click',()=>{Snd.click();showSettings(false);});
+$('#wipe').addEventListener('click',e=>{ // asks once more, then starts over from a clean page
+  if(e.target.dataset.sure){Save.wipe();location.reload();return;}
+  e.target.dataset.sure=1;e.target.textContent='Erase settings and records? Click again';setTimeout(disarm,4000);
+});
+
 addEventListener('mousemove',e=>{
   if(inp.locked){ // clamp: some browsers report one huge bogus delta right after locking
-    if(!inp.focus)inp.aim-=clamp(e.movementX,-160,160)*.0026;inp.pitch=clamp(inp.pitch+clamp(e.movementY,-160,160)*.0018,-.05,.75);}
+    if(!inp.focus)inp.aim-=clamp(e.movementX,-160,160)*.0026*S.sens;inp.pitch=clamp(inp.pitch+clamp(e.movementY,-160,160)*.0018*S.sens,-.05,.75);}
   inp.mx=(e.clientX/innerWidth)*2-1;
 });
 const inMenu=()=>game.phase==='title'||game.phase==='matchEnd';
@@ -147,21 +186,23 @@ addEventListener('mousedown',e=>{
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keydown',e=>{
   if(e.repeat)return;const k=e.code;inp.keys[k]=true;
+  if(k==='KeyM')toggleMute();
+  if(k==='Escape'&&isOpen('#settings')){showSettings(false);return;}
   // Let native buttons handle Tab, Space and Enter on selection/help screens.
   if(inMenu()){
+    if(isOpen('#settings'))return;
     if((k==='Enter'||k==='KeyR')&&game.phase==='matchEnd'&&!e.target.closest('button'))begin();
     if(k==='Escape'&&game.phase==='matchEnd')game.toTitle();
-    if(k==='KeyM')Snd.toggle();
-    if(k==='Enter'&&game.phase==='title'&&$('#how').classList.contains('hidden')&&!e.target.closest('button'))begin();
+    if(k==='Enter'&&game.phase==='title'&&!isOpen('#how')&&!e.target.closest('button'))begin();
     return;
   }
+  if(k==='KeyP'){setPause(!game.paused);if(!game.paused)tryLock();}
+  if(game.paused)return; // the pause menu's buttons and sliders take the keys
   if(['Space','ShiftLeft','ShiftRight','KeyW','KeyA','KeyS','KeyD','Tab'].includes(k))e.preventDefault();
   if(k==='Space')inp.blockPressed=true;
   if(k==='ShiftLeft'||k==='ShiftRight')inp.dodge=true;
   if(k==='KeyJ')inp.light=true;if(k==='KeyK')inp.heavy=true;
   if(k==='KeyQ'||k==='Tab'){inp.focus=!inp.focus;ui.focus.classList.toggle('on',inp.focus);ui.focus.textContent=inp.focus?'Q · Focused':'Q · Focus';}
-  if(k==='KeyM')Snd.toggle();
-  if(k==='KeyP'&&!inMenu()){setPause(!game.paused);if(!game.paused)tryLock();}
 });
 addEventListener('keyup',e=>{inp.keys[e.code]=false;});
 addEventListener('blur',()=>{inp.keys={};if(game.phase==='fight'&&!DEMO)setPause(true);});
@@ -170,7 +211,7 @@ $('#begin').addEventListener('click',begin);$('#again').addEventListener('click'
 $('#menu').addEventListener('click',()=>{Snd.click();game.toTitle();});
 $('#howBtn').addEventListener('click',()=>{Snd.init();Snd.click();$('#how').classList.remove('hidden');});
 $('#howBack').addEventListener('click',()=>{Snd.click();$('#how').classList.add('hidden');});
-for(const id of ['#diffs','#diffs2'])$(id).addEventListener('click',e=>{const d=e.target.dataset.d;if(!d)return;game.diff=d;Snd.init();Snd.click();syncDiffButtons();});
+for(const id of ['#diffs','#diffs2'])$(id).addEventListener('click',e=>{const d=e.target.dataset.d;if(!d)return;game.diff=d;Snd.init();Snd.click();syncDiffButtons();remember();});
 
 function playerIntent(dt){
   const I=player.intent,k=inp.keys,toE=Math.atan2(enemy.pos.x-player.pos.x,enemy.pos.z-player.pos.z);
@@ -260,7 +301,7 @@ function updateHud(real){
 function updateTrails(){
   for(const f of [player,enemy]){
     let s=0,hot=false;
-    if(f.state==='attack'){s=f.phase==='active'?1:f.phase==='wind'?(f.st>f.atk.wind-.08?.5:0):Math.max(0,.6-(f.st-f.atk.wind-f.atk.act)*5);hot=f.atk.kind==='heavy'&&!f.atk.charged;} // a charged blow keeps the knight's own colour, to match its glow
+    if(f.state==='attack'){s=f.phase==='active'?1:f.phase==='wind'?(f.st>f.atk.wind-.08?.5:0):Math.max(0,.6-(f.st-f.atk.wind-f.atk.act)*5);hot=f.atk.kind==='heavy'&&!f.atk.charged;if(f.atk.shield)s=0;} // a charged blow keeps the knight's own colour, to match its glow
     _a.lerpVectors(f.blade[0],f.blade[1],.35);f.trail.push(_a,f.blade[1],f.ragdoll?0:s,hot);
     const ey=f.root.userData.eyes; // glowing eyes flare during a heavy windup
     if(ey){const k=f.state==='attack'&&f.atk.kind==='heavy'&&f.phase==='wind'?1:0;ey.color.setRGB(6+k*14,.5+k*2,.2);}
@@ -272,7 +313,7 @@ function updateTrails(){
 }
 
 /* ── main loop ── */
-let last=performance.now(),fpsAcc=0,fpsN=0,quality=2;
+let last=performance.now(),fpsAcc=0,fpsN=0,quality=2,autoQ=true;
 function frame(now){
   requestAnimationFrame(frame);
   const real=Math.min(.05,(now-last)/1000);last=now;
@@ -288,12 +329,9 @@ function frame(now){
   // adaptive quality: shed cost if the machine is struggling
   fpsAcc+=real;fpsN++;
   if(fpsAcc>3){const fps=fpsN/fpsAcc;fpsAcc=0;fpsN=0;
-    if(fps<38&&quality>0){quality--;
-      if(quality===1){gfx.pixelRatio=1;renderer.setPixelRatio(1);gfx.composer&&gfx.composer.setPixelRatio(1);setArenaQuality(quality);}
-      else{gfx.bloomOn=false;setArenaQuality(quality);}
-    }}
+    if(autoQ&&fps<38&&quality>0)applyQuality(quality-1);}
 }
-buildSelect();syncDiffButtons();game.pips();
+buildSelect();syncDiffButtons();game.pips();syncSettings();setQuality(S.quality);
 window.__booted=true;
 if(DEMO)begin();
 requestAnimationFrame(frame);
