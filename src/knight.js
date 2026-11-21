@@ -9,6 +9,7 @@ import {WEAPONS} from './weapons.js';
    o: steel, rough, trim, mail, cloth, blade (colours) · emblem · crest (fin colour)
       helm ('plume'|'horned'|'crest'|'great'|'sun'|'beak'|'boar') · mantle ('fur'|'feather': what lies over the shoulders)
       shield ('heater'|'round'|'kite'|'none') · scale (whole body) · bulk (pauldron size) · weapon (key into WEAPONS)
+      charged (does the blade kindle for a charged blow? defaults to whether the weapon's own moveset has one)
       capeW, capeL (cape size; its design comes from the emblem, see CAPES in textures.js) */
 export const HIP_Y=.88, UA=.29, FA=.27, TH=.45, SHN=.43, ANKLE=.07;
 export const CHEST_OFF=V(0,.10,0), SH_R=V(-.25,.45,0), SH_L=V(.25,.45,0), HJ_L=V(.11,-.03,0), HJ_R=V(-.11,-.03,0);
@@ -181,7 +182,7 @@ export function buildKnight(o){
   // weapon (grip along +Y of the hand)
   const arms=()=>new THREE.MeshStandardMaterial({map:tex(emblemCanvas(o.emblem)),roughness:.7,metalness:.1,envMapIntensity:.4});
   const WD=WEAPONS[o.weapon||'sword'],W=WD.build({add,grp,cyl,box,sph,m,arms},aR.hand);
-  if(Object.values(WD.moves).some(a=>a.charged)){ // its steel kindles during a charged blow (driven from main.js)
+  if(o.charged??Object.values(WD.moves).some(a=>a.charged)){ // its steel kindles during a charged blow (driven from main.js)
     m.blade.emissive.set(o.trailColor??0xffffff);m.blade.emissiveIntensity=0;root.userData.charge=m.blade;}
   // shield (faces +Z of the left hand). shieldC is the centre of the guard that blows are tested against;
   // a knight with no shield guards with the weapon itself, between the hands.

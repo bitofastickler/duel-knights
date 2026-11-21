@@ -131,13 +131,17 @@ export const CROWNSPLITTER={name:'Crownsplitter',tip:'slow to fall, but two on y
     A(.80,{cy:.1,cp:.34,hy:-.12,hz:.1,rh:[-.12,.62,.54],rd:[0,.12,.99]}),
     A(.84,SPLIT),A(1.04,SPLIT),K(1.44,{})]};
 
-/* Ysolde: her third cut is a lunge from low down that carries her twice as far as a longsword's thrust.
-   It catches a foe who backs off, and leaves her stretched out in front of one who steps aside. */
-const LONG={cy:.5,cp:.3,hy:-.24,hz:.36,sf:.5,rh:[-.06,.40,.62],rd:[.02,.02,1]};
-export const LONG_THORN={name:'The Long Thorn',tip:'a low lunge that crosses twice the ground',
-  kind:'light',next:null,wind:.26,act:.14,rec:.60,dmg:15,cost:14,lunge:5.6,stun:.36,kb:3.2,bs:15,chip:0,keys:[
-    A(.26,{cy:-.7,hy:-.14,hz:-.08,rh:[-.38,.30,-.08],rd:[.06,.06,1]},2),
-    A(.34,LONG,3),A(.52,LONG),K(1.00,{})]};
+/* Ysolde: in place of the overhead, a fencer's lunge. She salutes, blade upright before her face, sinks back
+   onto her rear leg with the point levelled, then throws herself the length of two sword-reaches, shield arm
+   flung out behind. `charged`: the blade kindles as she gathers. It strikes from where no other sword can,
+   but it is one thin line: a foe who steps aside has her stretched out in front of them, and a shield turns
+   it more cheaply than an overhead. `range` lets the AI loose it from that much further off. */
+const LONG={cy:.55,cp:.34,hy:-.27,hz:.42,sf:.56,rh:[-.04,.42,.66],rd:[.01,.01,1],lh:[.44,.34,-.22],ld:[.9,0,-.3]};
+export const LONG_THORN={name:'The Long Thorn',tip:'a salute, then a lunge from far outside sword reach. Step aside',
+  kind:'heavy',next:null,charged:true,range:1.45,wind:.58,act:.16,rec:.66,dmg:27,cost:25,lunge:6.6,stun:.58,kb:5.6,bs:30,chip:3,poise:.3,keys:[
+    A(.20,{cy:-.1,cp:-.05,hy:.02,rh:[-.10,.50,.34],rd:[.02,1,.06]},1),                              // the salute…
+    A(.58,{cy:-.85,cp:.06,hy:-.2,hz:-.14,rh:[-.42,.34,-.16],rd:[.08,.03,1]},2),                     // …the point levelled, drawn right back…
+    K(.66,LONG,3),K(.84,LONG,0),K(1.40,{})]};                                                       // …and loosed
 
 /* Oriel: two cuts, then the shield itself, driven in behind her shoulder. It wounds little, but it throws
    the foe back out of reach, and caught on a guard it costs them twice what a sword's third blow would. */

@@ -34,10 +34,10 @@ export const ROSTER=[
   },
   {
     id:'ysolde',name:'Ysolde',title:'the Thorn',
-    blurb:'Quick cuts, cheap dodges, and a riposte that punishes every mistake. She cannot take much.',
+    blurb:'Quick cuts, cheap dodges, a riposte that punishes every mistake, and a lunge that finds you from across the ring. She cannot take much.',
     look:{steel:0xb6bbb4,rough:.28,trim:0xa7b2ae,mail:0x3a403a,cloth:0x1f5a34,blade:0xe8ecef,emblem:'thorn',helm:'crest',crest:0x2e9a52,scale:.96,bulk:.85,capeW:.38,capeL:.64,trailColor:0x9dffc0},
     alt:{cloth:0x5a1f4e,crest:0x9a2e86,trailColor:0xffa0e8},
-    weapon:'sword',moves:{l3:LONG_THORN},
+    weapon:'sword',moves:{heavy:LONG_THORN},
     stats:{hp:86,stam:110,speed:3.9,regen:36,dodgeCost:15,dodgeSpeed:9.4,atkSpeed:1.1,dmg:.85,riposte:1.5},
     ai:{pressure:1.6,bait:.8,heavy:.15,circle:.9},
     rating:{health:2,power:2,speed:5,guard:2},

@@ -77,7 +77,7 @@ export class Fighter{
     this.weapon=WEAPONS[char.weapon];this.wr=this.weapon.radius;this.reach=this.weapon.reach*(L.scale||1);
     this.stats={...BASE_STATS,...char.stats};this.maxHp=this.stats.hp;this.maxSt=this.stats.stam;
     this.moves=buildMoves({...this.weapon.moves,...char.moves},this.stats);
-    this.b=buildKnight({...L,weapon:char.weapon});this.root=this.b.root;this.guardY=this.b.shieldC.position.y;
+    this.b=buildKnight({...L,weapon:char.weapon,charged:Object.values(this.moves).some(a=>a.charged)});this.root=this.b.root;this.guardY=this.b.shieldC.position.y;
     this.pos=this.root.position;this.vel=V();this.yaw=0;this.seed=rand(10);
     this.pose=P();this.clip={t:0,keys:[{t:0,p:P(),e:0},{t:0,p:P(),e:0}]};
     this.intent={mx:0,mz:0,face:0,block:false,blockPressed:false,light:false,heavy:false,dodge:false,taunt:false};

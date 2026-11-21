@@ -65,13 +65,14 @@ export class Brain{
     if(me.stam<34){w.retreat=3.5;w.pressure=.15;w.heavy=0;w.feint=0;}
     else if(me.stam<55){w.heavy*=.3;w.circle+=.6;}
     if(me.hp<30&&foe.hp>50)w.bait+=.5*c.bait;
-    const R=me.reach;let tot=0;for(const k in w)tot+=w[k];let r=Math.random()*tot,pick='circle';
+    const R=me.reach,HR=R*(me.moves.heavy.range||1);let tot=0; // HR: a heavy that carries its knight a long way is loosed from further off
+    for(const k in w)tot+=w[k];let r=Math.random()*tot,pick='circle';
     for(const k in w){r-=w[k];if(r<=0){pick=k;break;}}
     switch(pick){
       case 'circle':this.setPlan('circle',{dur:rand(.7,1.7),guard:Math.random()<.45});break;
       case 'pressure':this.setPlan('pressure',{n:1+((Math.random()*3)|0),reach:rand(1.85,2.25)*R});break;
-      case 'heavy':this.setPlan('heavy',{reach:2.2*R});break;
-      case 'feint':this.setPlan('heavy',{reach:2.4*R,feint:true,feintAt:rand(.26,.4)*(me.moves.heavy.wind/.62)});break;
+      case 'heavy':this.setPlan('heavy',{reach:2.2*HR});break;
+      case 'feint':this.setPlan('heavy',{reach:2.4*HR,feint:true,feintAt:rand(.26,.4)*(me.moves.heavy.wind/.62)});break;
       case 'bait':this.setPlan('bait',{dur:rand(.8,1.5),range:rand(2.75,2.95)*foe.reach});break;
       case 'retreat':this.setPlan('retreat');break;
     }

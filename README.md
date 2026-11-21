@@ -66,7 +66,7 @@ or [Wyrmfire Crucible](https://bitofastickler.github.io/duel-knights/?arena=wyrm
 |:--|:--|:--|
 | **Ser Caldwin**, the Azure | Longsword | The baseline. Three-cut combo, even stats |
 | **Varkos**, the Ashen King | Longsword | Bigger, sturdier guard, a step slower. His heavy is the *Crownsplitter*: a slower overhead, and two of them on a shield break most guards |
-| **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health. Her third cut is *The Long Thorn*: a low lunge that crosses twice the ground |
+| **Ysolde**, the Thorn | Longsword | Fast cuts, cheap dodges, big ripostes; low health. Her heavy is *The Long Thorn*: a salute, then a lunge that strikes from far outside sword reach. Step aside and she is stretched out in front of you |
 | **Brann**, the Bellbreaker | Flanged mace | Slow and huge. Blows drain guards and bleed through shields |
 | **Dame Oriel**, the Sunsworn | Longsword | Tireless guard and the hardest riposte in the ring; light blows. Her third blow is *Daybreak*: the shield itself, which wounds little but hurls the foe back and empties a guard |
 | **Corvin**, the Gallows Crow | Spear, in both hands | No shield. Three thrusts from beyond sword reach; the heavy is a charged thrust driven down from a high guard. Fragile once you are inside the point |
