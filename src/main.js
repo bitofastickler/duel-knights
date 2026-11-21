@@ -10,6 +10,7 @@ import {DIFF,Brain} from './brain.js';
 import {ROSTER,CHARACTERS} from './characters.js';
 import {initCombat,sweep} from './combat.js';
 import {Save} from './save.js';
+import {newRun,bout as nextBout,report,bracket,validRun} from './lists.js';
 
 buildArena(params.get('arena')||Save.data.sel.arena);buildEmbers(); // a link's choice wins over the remembered one
 
@@ -19,20 +20,27 @@ const ROMAN=['I','II','III','IV','V'];
 const inp={keys:{},light:false,heavy:false,dodge:false,blockPressed:false,aim:0,pitch:.24,locked:false,noLock:false,focus:false,mx:0};
 const pick=(id,fallback)=>CHARACTERS[id]?id:fallback;
 let player=null,enemy=null;
+// the lists: drop anything in the save that this roster cannot make sense of
+if(!validRun(Save.data.run))Save.data.run=null;
+if(!CHARACTERS[Save.data.champion.id])Save.data.champion={id:'',mine:false,defences:0};
+Save.data.past=Save.data.past.filter(c=>CHARACTERS[c.id]);
+let run=Save.data.run,shown=null; // the tournament in progress, and the one on the bracket screen (it may be over)
 
 const game={
-  phase:'title',paused:false,diff:DIFF[Save.data.diff]?Save.data.diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:ARENAS.find(a=>a.id===arenaId()).orbit,
+  phase:'title',paused:false,mode:!DEMO&&Save.data.mode==='lists'?'lists':'duel',bout:null,diff:DIFF[Save.data.diff]?Save.data.diff:'knight',round:1,score:[0,0],timer:0,time:0,vig:0,winner:null,stats:null,camYaw:0,orbit:ARENAS.find(a=>a.id===arenaId()).orbit,
   sel:{p:pick(params.get('p'),pick(Save.data.sel.p,'caldwin')),e:pick(params.get('e'),pick(Save.data.sel.e,'varkos')),arena:arenaId()},
   callout(t){ui.callout.textContent=t;ui.callout.classList.remove('go');void ui.callout.offsetWidth;ui.callout.classList.add('go');},
   banner(big,sub=''){ui.banner.children[0].textContent=big;ui.banner.children[1].textContent=sub;ui.banner.classList.toggle('on',!!big);},
   stamFail(){Snd.fail();ui.pStBar.classList.remove('fail');void ui.pStBar.offsetWidth;ui.pStBar.classList.add('fail');},
   pips(){for(const [el,n] of [[$('#pPips'),this.score[0]],[$('#ePips'),this.score[1]]]){el.innerHTML='';for(let i=0;i<3;i++){const d=document.createElement('div');d.className='pip'+(i<n?' on':'');el.appendChild(d);}}},
+  /** a duel between the picks, or, with `bout` set, the next fight of the lists */
   startMatch(){
+    const b=this.bout;if(b){buildArena(b.arena);ui.arena.textContent=ARENAS.find(a=>a.id===b.arena).name;}
     makeFighters();
     this.score=[0,0];this.round=1;this.stats={hits:[0,0],parries:[0,0],dmg:[0,0],blocks:[0,0]};
-    enemy.brain=new Brain(enemy,player,DIFF[this.diff]);
+    enemy.brain=new Brain(enemy,player,DIFF[b?b.diff:this.diff]);
     player.brain=DEMO?new Brain(player,enemy,DIFF.knight):null;
-    $('#title').classList.add('hidden');$('#how').classList.add('hidden');$('#end').classList.add('hidden');ui.hud.classList.remove('off');
+    for(const id of ['#title','#how','#end','#lists'])$(id).classList.add('hidden');ui.hud.classList.remove('off');
     ui.help.style.opacity='';clearTimeout(this.helpT);this.helpT=setTimeout(()=>ui.help.style.opacity=0,14000);
     this.startRound();
   },
@@ -41,7 +49,7 @@ const game={
     enemy.brain.reset();player.brain&&player.brain.reset();
     inp.aim=0;inp.pitch=.24;this.camYaw=0;this.phase='intro';this.timer=0;this.winner=null;
     ui.round.textContent='Round '+ROMAN[this.round-1];this.pips();
-    this.banner('Round '+ROMAN[this.round-1],this.score[0]===2&&this.score[1]===2?'Final round':'First to three');this.gonged=false;
+    this.banner('Round '+ROMAN[this.round-1],this.score[0]===2&&this.score[1]===2?'Final round':this.bout?this.bout.stage.name+(this.bout.champion?' · the champion':''):'First to three');this.gonged=false;
   },
   endRound(winner){
     this.phase='roundEnd';this.timer=0;this.winner=winner;this.score[winner===player?0:1]++;
@@ -53,15 +61,22 @@ const game={
     const s=this.stats;$('#stats').innerHTML=[['Rounds won',this.score],['Blows landed',s.hits],['Parries',s.parries],['Blocks',s.blocks],['Damage dealt',s.dmg.map(Math.round)]]
       .map(([n,v])=>`<span>${v[0]}</span><span>${n}</span><span>${v[1]}</span>`).join('');
     Save.result(player.char.id,win);syncDiffButtons();
+    if(this.bout){ // the lists: the rest of the stage is decided, and the title if this ended them
+      shown=report(Save.data,run,win);if(run.done)run=Save.data.run=null;Save.write();
+      if(shown.done==='won'){$('#endTitle').textContent='Champion';$('#endSub').textContent='The lists are yours';}
+      $('#onward').textContent=shown.done?'See the lists':'Onward';
+    }
+    $('#end').dataset.mode=this.bout?'lists':'duel';
     $('#end').classList.remove('hidden');ui.hud.classList.add('off');this.banner('');
     if(document.pointerLockElement)document.exitPointerLock();Snd.horn(win);
   },
   /** back to the knight and arena selection screen */
   toTitle(){
     this.phase='title';setPause(false);this.banner('');
-    $('#end').classList.add('hidden');ui.hud.classList.add('off');$('#title').classList.remove('hidden');
+    $('#end').classList.add('hidden');$('#lists').classList.add('hidden');ui.hud.classList.add('off');$('#title').classList.remove('hidden');
     if(document.pointerLockElement)document.exitPointerLock();
-    refreshSelect(); // stands the picks at the centre again, and shows the record with the match just fought
+    if(this.bout){this.bout=null;buildArena(this.sel.arena);refreshArena();} // a tournament bout was fought elsewhere: back to the chosen arena
+    refreshMode();refreshSelect(); // stands the picks at the centre again, and shows the record with the match just fought
   },
   onEvent(src,type,data){const o=src.other;if(o.brain)o.brain.notify(type,data);},
 };
@@ -70,8 +85,14 @@ initCombat(game);
 /* ── fighters ──
    Rebuilt only when the pick changes. Picking the same knight on both sides
    dresses the foe in that knight's alternate colours. */
+/** who stands opposite: the bout's foe, the pick, or on the title screen of the lists the champion to be unseated */
+function foeId(){
+  if(game.bout)return game.bout.e;
+  const c=Save.data.champion;
+  return game.mode==='lists'&&c.id&&!(c.mine&&c.id===game.sel.p)?c.id:game.sel.e;
+}
 function makeFighters(){
-  const pc=CHARACTERS[game.sel.p],ec=CHARACTERS[game.sel.e],mirror=pc===ec;
+  const pc=CHARACTERS[game.sel.p],ec=CHARACTERS[foeId()],mirror=pc===ec;
   if(!player||player.char!==pc){player&&player.dispose();player=new Fighter(pc,true);}
   if(!enemy||enemy.char!==ec||enemy.mirror!==mirror){enemy&&enemy.dispose();enemy=new Fighter(ec,false,mirror?ec.alt:{});enemy.mirror=mirror;}
   player.other=enemy;enemy.other=player;
@@ -110,15 +131,79 @@ function refreshArena(){
   $('#arenaDescription').textContent=a.description;ui.arena.textContent=a.name;
 }
 /** keep the picks and the difficulty for the next visit */
-function remember(){Object.assign(Save.data.sel,game.sel);Save.data.diff=game.diff;Save.write();}
+function remember(){Object.assign(Save.data.sel,game.sel);Save.data.diff=game.diff;Save.data.mode=game.mode;Save.write();}
+
+/* ── the lists (rules in lists.js) ── the mode switch and champion card on the title screen, and the bracket screen */
+const emblems={},emblem=id=>emblems[id]||(emblems[id]=emblemCanvas(CHARACTERS[id].look.emblem).toDataURL());
+const full=id=>`${CHARACTERS[id].name}, ${CHARACTERS[id].title}`,times=n=>n===1?'once':n===2?'twice':n+' times';
+const DIFF_NAME={squire:'Squire',knight:'Knight',warlord:'Warlord'};
+function refreshMode(){
+  $('#title').dataset.mode=game.mode;
+  document.querySelectorAll('#modes button').forEach(b=>{const on=b.dataset.m===game.mode;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
+  const c=Save.data.champion,L=Save.data.lists,past=Save.data.past;
+  $('#listsCard').innerHTML=`<div class="pickLabel">The lists</div>
+    ${c.id?`<div class="champ"><img alt="" src="${emblem(c.id)}"><div><small>${c.mine?'Your champion':'Reigning champion'}</small><b>${full(c.id)}</b>
+      <span>${c.defences?`Has kept the title ${times(c.defences)}`:'Newly crowned'}</span></div></div>`
+      :`<div class="champ"><div><small>Reigning champion</small><b>The title is vacant</b><span>Win the lists to take it</span></div></div>`}
+    <p>Eight seats and three fights: the Courtyard, the Cloister, then the Crucible. Each is a step harder than the last${c.id?', and the champion waits in the final':''}.</p>
+    ${past.length?`<p class="past">Before ${c.mine?'you':'them'}: ${past.slice(0,4).map(q=>`<img alt="${full(q.id)}" title="${full(q.id)}${q.mine?' (yours)':''}" src="${emblem(q.id)}">`).join('')}</p>`:''}
+    ${L.entered?`<div class="arm">Entered ${times(L.entered)} · won ${times(L.won).replace('0 times','never')}</div>`:''}`;
+  const at=run&&nextBout(run);
+  $('#begin').textContent=game.mode!=='lists'?'Enter the ring':run?'Return to the lists':'Enter the lists';
+  $('#runNote').innerHTML=game.mode==='lists'&&run?`${full(run.p)} · ${at.stage.name} next <button class="link" id="abandon">Abandon</button>`:'';
+}
+/** the bracket: every bout by stage, then what happens next */
+function showLists(r){
+  shown=r;const B=bracket(r),names=['Quarter-finals','Semi-finals','Final'];
+  const seat=(i,b)=>{
+    if(i===undefined)return `<div class="seat tbd">To be decided</div>`;
+    const id=r.seats[i];if(id==null)return `<div class="seat bye">No challenger</div>`;
+    const tag=i===0?'You':r.boss&&i===7?'Champion':'';
+    return `<div class="seat${i===0?' me':''}${b.won===i?' won':b.won!==undefined?' lost':''}"><img alt="" src="${emblem(id)}"><span>${CHARACTERS[id].name}</span>${tag?`<small>${tag}</small>`:''}</div>`;
+  };
+  $('#bracket').innerHTML=B.map((col,s)=>`<div class="col"><h4>${names[s]}</h4><div class="bouts">${col.map(b=>`<div class="bout${!r.done&&s===r.round&&b.seats[0]===0?' next':''}">${seat(b.seats[0],b)}${seat(b.seats[1],b)}</div>`).join('')}</div></div>`).join('');
+  const c=Save.data.champion;
+  if(!r.done){
+    const b=nextBout(r),a=ARENAS.find(a=>a.id===b.arena);
+    $('#listsTitle').textContent='The Lists';$('#listsTag').textContent=`${b.stage.name} · ${a.name}`;
+    $('#listsNote').innerHTML=`You meet <b>${full(b.e)}</b>${b.champion?', the reigning champion':''}. ${DIFF_NAME[b.diff]} difficulty, first to three rounds.`;
+    $('#listsGo').textContent='To the ring';$('#listsHome').textContent='Leave for now';
+  }else if(r.done==='won'){
+    $('#listsTitle').textContent='Champion';$('#listsTag').textContent='The lists are yours';
+    $('#listsNote').innerHTML=`<b>${full(c.id)}</b> holds the title${c.defences?`, and has kept it ${times(c.defences)}`:''}.`;
+    $('#listsGo').textContent='Home';$('#listsHome').textContent='';
+  }else{
+    $('#listsTitle').textContent='The Lists';$('#listsTag').textContent='You are out';
+    $('#listsNote').innerHTML=`<b>${full(c.id)}</b> ${c.defences?'keeps':'takes'} the title.`;
+    $('#listsGo').textContent='Enter again';$('#listsHome').textContent='Home';
+  }
+  $('#listsHome').classList.toggle('hidden',!$('#listsHome').textContent);
+  for(const id of ['#title','#end'])$(id).classList.add('hidden');ui.hud.classList.add('off');$('#lists').classList.remove('hidden');$('#listsGo').focus();
+}
+/** begin a run, or pick up the one in progress as the knight who entered it */
+function enterLists(){
+  if(!run){run=Save.data.run=newRun(Save.data,game.sel.p,game.diff);Save.write();}
+  if(game.sel.p!==run.p){game.sel.p=run.p;refreshSelect();}
+  showLists(run);
+}
+$('#modes').addEventListener('click',e=>{const m=e.target.dataset.m;if(!m||m===game.mode)return;Snd.init();Snd.click();game.mode=m;refreshMode();refreshSelect();remember();});
+$('#runNote').addEventListener('click',e=>{if(e.target.id!=='abandon')return;Snd.click();run=Save.data.run=null;Save.write();refreshMode();});
+$('#listsGo').addEventListener('click',()=>{
+  Snd.init();Snd.click();
+  if(!shown.done){game.bout=nextBout(run);fight();}
+  else if(shown.done==='won')game.toTitle();
+  else{if(game.phase!=='title')game.toTitle();enterLists();}
+});
+$('#listsHome').addEventListener('click',()=>{Snd.click();game.toTitle();});
 const SLOT={l1:'First light blow',l2:'Second light blow',l3:'Third light blow',heavy:'Heavy attack'};
 function refreshSelect(){
   for(const side of ['p','e']){
     document.querySelectorAll(`#${side}Cards .card`).forEach(b=>{const on=b.dataset.id===game.sel[side];b.classList.toggle('sel',on);b.setAttribute('aria-pressed',on);});
-    const c=CHARACTERS[game.sel[side]],r=c.rating,rec=side==='p'&&Save.data.record[c.id];
+    const c=CHARACTERS[game.sel[side]],r=c.rating,rec=side==='p'&&Save.data.record[c.id],won=side==='p'&&Save.data.titles[c.id],
+      crown=side==='p'&&Save.data.champion.mine&&Save.data.champion.id===c.id;
     // a blow of the knight's own, in place of one of the weapon's usual attacks
     const own=Object.entries(c.moves||{}).map(([slot,m])=>`<div class="own"><b>${m.name}</b>${SLOT[slot]} · ${m.tip}</div>`).join('');
-    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><div class="arm">${WEAPONS[c.weapon].name}${rec?` · won ${rec.w}, lost ${rec.l}`:''}</div><p>${c.blurb}</p>${own}
+    $(`#${side}Bio`).innerHTML=`<h3>${c.name}<small>${c.title}</small></h3><div class="arm">${WEAPONS[c.weapon].name}${rec?` · won ${rec.w}, lost ${rec.l}`:''}${crown?' · champion':won?` · ${won} title${won>1?'s':''}`:''}</div><p>${c.blurb}</p>${own}
       <div class="meters"><span>Health</span>${pips(r.health)}<span>Power</span>${pips(r.power)}<span>Speed</span>${pips(r.speed)}<span>Guard</span>${pips(r.guard)}</div>`;
   }
   if(game.phase==='title'){makeFighters();placeForTitle();}
@@ -126,7 +211,7 @@ function refreshSelect(){
 function syncDiffButtons(){document.querySelectorAll('.diffs button').forEach(b=>b.classList.toggle('sel',b.dataset.d===game.diff));}
 
 if(DEMO||params.has('debug'))window.__duel={game,FX,inp,renderer,scene,camera,gfx,selectArena,setArenaQuality,step:dt=>step(dt),begin:()=>begin(),
-  get player(){return player;},get enemy(){return enemy;},select(p,e){game.sel.p=pick(p,game.sel.p);game.sel.e=pick(e,game.sel.e);refreshSelect();},
+  get player(){return player;},get enemy(){return enemy;},get run(){return run;},select(p,e){game.sel.p=pick(p,game.sel.p);game.sel.e=pick(e,game.sel.e);refreshSelect();},
   /** pin the camera (for screenshots); call with no arguments to release it */
   cam(p,l){camHold=p?{p:V(...p),l:V(...l)}:null;}};
 
@@ -178,6 +263,8 @@ addEventListener('mousemove',e=>{
   inp.mx=(e.clientX/innerWidth)*2-1;
 });
 const inMenu=()=>game.phase==='title'||game.phase==='matchEnd';
+/** is the key going to a button that will act on it itself? (one just hidden can still hold the focus for a moment) */
+const onButton=e=>{const b=e.target.closest('button');return !!b&&b.getClientRects().length>0;};
 addEventListener('mousedown',e=>{
   if(inMenu()||game.paused)return;
   if(!inp.locked)tryLock();
@@ -191,9 +278,10 @@ addEventListener('keydown',e=>{
   // Let native buttons handle Tab, Space and Enter on selection/help screens.
   if(inMenu()){
     if(isOpen('#settings'))return;
-    if((k==='Enter'||k==='KeyR')&&game.phase==='matchEnd'&&!e.target.closest('button'))begin();
+    if(isOpen('#lists')){if(k==='Enter'&&!onButton(e)){e.preventDefault();$('#listsGo').click();}if(k==='Escape')game.toTitle();return;}
+    if((k==='Enter'||k==='KeyR')&&game.phase==='matchEnd'&&!onButton(e)){e.preventDefault();again();} // (the screen it opens focuses a button: this key must not press it too)
     if(k==='Escape'&&game.phase==='matchEnd')game.toTitle();
-    if(k==='Enter'&&game.phase==='title'&&!isOpen('#how')&&!e.target.closest('button'))begin();
+    if(k==='Enter'&&game.phase==='title'&&!isOpen('#how')&&!onButton(e)){e.preventDefault();begin();}
     return;
   }
   if(k==='KeyP'){setPause(!game.paused);if(!game.paused)tryLock();}
@@ -206,8 +294,12 @@ addEventListener('keydown',e=>{
 });
 addEventListener('keyup',e=>{inp.keys[e.code]=false;});
 addEventListener('blur',()=>{inp.keys={};if(game.phase==='fight'&&!DEMO)setPause(true);});
-function begin(){Snd.init();Snd.click();tryLock();setPause(false);game.startMatch();}
-$('#begin').addEventListener('click',begin);$('#again').addEventListener('click',begin);
+function fight(){tryLock();setPause(false);game.startMatch();}
+/** the title screen's main button: a duel, or into the lists */
+function begin(){Snd.init();Snd.click();if(game.mode==='lists')enterLists();else fight();}
+/** after a match: the same duel again, or back to the bracket */
+function again(){Snd.init();Snd.click();if(game.bout)showLists(shown);else fight();}
+$('#begin').addEventListener('click',begin);$('#again').addEventListener('click',again);$('#onward').addEventListener('click',again);
 $('#menu').addEventListener('click',()=>{Snd.click();game.toTitle();});
 $('#howBtn').addEventListener('click',()=>{Snd.init();Snd.click();$('#how').classList.remove('hidden');});
 $('#howBack').addEventListener('click',()=>{Snd.click();$('#how').classList.add('hidden');});
@@ -331,7 +423,7 @@ function frame(now){
   if(fpsAcc>3){const fps=fpsN/fpsAcc;fpsAcc=0;fpsN=0;
     if(autoQ&&fps<38&&quality>0)applyQuality(quality-1);}
 }
-buildSelect();syncDiffButtons();game.pips();syncSettings();setQuality(S.quality);
+buildSelect();refreshMode();syncDiffButtons();game.pips();syncSettings();setQuality(S.quality);
 window.__booted=true;
 if(DEMO)begin();
 requestAnimationFrame(frame);

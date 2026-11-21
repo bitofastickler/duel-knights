@@ -81,7 +81,7 @@ try{
   for(const [width,height] of [[1440,900],[1280,720],[1024,768],[800,600],[390,844]]){
     await page.setViewportSize({width,height});await draw();
     for(const selector of [...ids.map(id=>`[data-arena="${id}"]`),'#begin']){
-      const el=page.locator(selector);await el.scrollIntoViewIfNeeded();const b=await el.boundingBox();
+      const el=page.locator(selector);await el.evaluate(e=>e.scrollIntoView({block:'center'}));const b=await el.boundingBox(); // centred: "if needed" can stop a pixel short
       assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=height+1,`${selector} clipped at ${width}x${height}`);
       if(selector!=='#begin')assert.ok(await el.evaluate(e=>e.scrollWidth<=e.clientWidth),`${selector} text clipped at ${width}px`);
     }

@@ -1,6 +1,7 @@
 # Duel Knights
 
-A torch-lit 3D sword duel in the browser. Pick a knight, a foe and a battleground. First to three rounds.
+A torch-lit 3D sword duel in the browser. Pick a knight, a foe and a battleground, or enter the lists
+and fight for the title. First to three rounds.
 Everything (the knights, the arena, the sound) is built in code from primitives with
 [Three.js](https://threejs.org/). The game loads no models, textures or audio files.
 
@@ -30,9 +31,21 @@ loads from a CDN, so you need to be online the first time.
 | Q | Focus (lock facing onto your foe) |
 | P / M | Pause (resume, settings, or leave the fight) / mute |
 
+## The lists
+
+**The lists** on the home screen is a tournament: eight seats and three fights, in the Courtyard,
+the Cloister and then the Crucible. Each fight is a step harder than the last, starting a step below the
+difficulty you chose. Whoever holds the title waits on the far side of the bracket and can only be met
+in the final. Win it and your knight is champion: the next time you enter as someone else, that
+champion is the one to beat, and entering as the champion yourself is a defence of the title. Lose,
+and the champion keeps it (or, if the title was vacant or yours, whoever won takes it).
+
+A run in progress is saved after every fight, so you can leave and come back; **Abandon** drops it.
+Leaving a fight part-way returns you to the bracket with that fight still to win.
+
 **Settings** (from the home screen or the pause menu) has volume, mouse speed and graphics detail.
-The game remembers them in the browser, along with your last knights, arena and difficulty and each
-knight's won/lost record. **Erase saved data** on the settings screen clears all of it.
+The game remembers them in the browser, along with your last knights, arena and difficulty, each
+knight's won/lost record, the champion and your titles. **Erase saved data** on the settings screen clears all of it.
 
 ## The arenas
 
@@ -93,10 +106,12 @@ src/ragdoll.js      Verlet ragdoll for knockouts
 src/fx.js           sparks, dust, hit-stop, slow motion, camera shake
 src/audio.js        synthesised sound
 src/textures.js     procedural textures and heraldry
-src/save.js         what the game remembers between visits: settings, picks, match record
+src/save.js         what the game remembers between visits: settings, picks, match record, the champion
+src/lists.js        the tournament's rules: seating, who goes through, who holds the title
 tests/sim.mjs       AI-vs-AI smoke test and balance table
 tests/arenas.mjs    arena UI, resource cleanup and render-budget checks
 tests/save.mjs      saving, the settings screen and the pause menu
+tests/lists.mjs     the tournament: its rules, its screens and the champion
 tests/browser.mjs   shared static-server / Playwright test harness
 ```
 
@@ -125,6 +140,7 @@ For anything that touches saved data, the settings screen or the pause menu:
 
 ```bash
 node tests/save.mjs
+node tests/lists.mjs
 ```
 
 A new saved value needs only a default in `fresh()` in `src/save.js`.

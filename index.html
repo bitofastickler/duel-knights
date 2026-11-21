@@ -133,6 +133,42 @@
   .bio .own{font-size:11px;letter-spacing:.05em;line-height:1.5;opacity:.85;margin:0 0 9px;padding-left:9px;border-left:1px solid var(--gold2)}
   .bio .own b{display:block;font-weight:normal;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
   .links{display:flex;gap:6px;justify-content:center}
+  /* game modes, and the lists */
+  .modes{display:flex;gap:10px;justify-content:center;margin:-8px 0 18px}
+  #title[data-mode=lists] .duel-only,#title[data-mode=duel] .lists-only,#end[data-mode=lists] .duel-only,#end[data-mode=duel] .lists-only{display:none}
+  .champ{display:flex;align-items:center;gap:14px;margin:4px 0 10px}
+  .champ img{width:54px;height:54px;flex:none;border:1px solid var(--gold);box-shadow:0 0 18px rgba(255,170,70,.3)}
+  .champ small{display:block;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+  .champ b{display:block;font-weight:normal;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:#f3e2b4;margin:3px 0}
+  .champ span{font-size:11px;letter-spacing:.08em;opacity:.7}
+  #listsCard p{margin:0 0 9px;font-size:12px;letter-spacing:.05em;opacity:.75;line-height:1.5}
+  #listsCard .arm{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  #listsCard .past{display:flex;align-items:center;gap:6px;opacity:.8}
+  #listsCard .past img{width:22px;height:22px;border:1px solid var(--gold2)}
+  #runNote{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);min-height:0;margin-top:10px}
+  #runNote button.link{margin:0 0 0 6px;padding:2px 6px;letter-spacing:.2em;text-decoration:underline;text-underline-offset:3px}
+  #lists{overflow-y:auto;justify-content:safe center;padding:24px 16px;background:radial-gradient(ellipse at center,rgba(10,8,12,.9),rgba(4,3,5,.97))}
+  #lists>*{flex-shrink:0}
+  #lists h1{font-size:clamp(34px,5vw,64px)}
+  #lists .tag{margin-bottom:22px}
+  #bracket{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 26px;width:min(860px,100%);margin-bottom:20px;text-align:left}
+  #bracket .col{display:flex;flex-direction:column;gap:10px}
+  #bracket .bouts{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:12px}
+  #bracket h4{margin:0 0 2px;font-weight:normal;font-size:10px;letter-spacing:.36em;text-transform:uppercase;color:var(--gold);text-align:center;flex:none}
+  .bout{border:1px solid rgba(140,111,51,.4);background:rgba(6,5,8,.6)}
+  .bout.next{border-color:var(--gold);box-shadow:0 0 18px rgba(255,170,70,.28)}
+  .seat{display:flex;align-items:center;gap:10px;padding:5px 9px;min-height:36px;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+  .seat+.seat{border-top:1px solid rgba(140,111,51,.25)}
+  .seat img{width:24px;height:24px;flex:none}
+  .seat span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat small{margin-left:auto;font-size:9px;letter-spacing:.24em;color:var(--gold);flex:none}
+  .seat.me span{color:#ffe9b0}
+  .seat.won{background:rgba(217,183,108,.13)}
+  .seat.lost{opacity:.38}
+  .seat.tbd,.seat.bye{font-size:10px;letter-spacing:.24em;opacity:.45}
+  #listsNote{font-size:13px;letter-spacing:.06em;line-height:1.6;margin:0 0 22px;max-width:640px;opacity:.9}
+  #listsNote b{font-weight:normal;color:#f3e2b4}
+  @media(max-width:640px){#bracket{grid-template-columns:1fr;gap:16px}}
   #settings,#how{background:radial-gradient(ellipse at center,rgba(10,8,12,.94),rgba(4,3,5,.98))} /* opened over another menu: hide it */
   #pause button.link{margin-top:8px}
   .opts{display:grid;grid-template-columns:auto minmax(150px,260px) 64px;gap:20px 20px;align-items:center;text-align:left;font-size:12px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:30px}
@@ -177,12 +213,14 @@
 
 <div id="title" class="overlay">
   <h1>Duel Knights</h1>
+  <div class="modes" id="modes" role="group" aria-label="Game mode"><button data-m="duel">Single duel</button><button data-m="lists">The lists</button></div>
   <div class="pick">
     <div class="side-pick"><div class="pickLabel">Your knight</div><div class="cards" id="pCards"></div><div class="bio" id="pBio"></div></div>
-    <div class="vs">vs</div>
-    <div class="side-pick"><div class="pickLabel">Your foe</div><div class="cards" id="eCards"></div><div class="bio" id="eBio"></div></div>
+    <div class="vs duel-only">vs</div>
+    <div class="side-pick duel-only"><div class="pickLabel">Your foe</div><div class="cards" id="eCards"></div><div class="bio" id="eBio"></div></div>
+    <div class="side-pick lists-only" id="listsCard"></div>
   </div>
-  <section class="arena-pick" aria-labelledby="arenaHeading">
+  <section class="arena-pick duel-only" aria-labelledby="arenaHeading">
     <div class="pickLabel" id="arenaHeading">Choose your battleground</div>
     <div class="arena-cards" id="arenaCards" role="group" aria-labelledby="arenaHeading"></div>
     <p id="arenaDescription" aria-live="polite"></p>
@@ -191,6 +229,7 @@
     <button data-d="squire">Squire</button><button data-d="knight">Knight</button><button data-d="warlord">Warlord</button>
   </div>
   <button class="main" id="begin">Enter the ring</button>
+  <div id="runNote"></div>
   <div class="links"><button class="link" id="howBtn">How to fight</button><button class="link" id="setBtn">Settings</button></div>
 </div>
 
@@ -210,6 +249,7 @@
   <div class="note" style="margin:0 0 24px">Every action costs stamina — an empty bar breaks your guard. Weapons only wound what they actually touch.<br>
     A mace drains your guard fast and its blows bleed through the shield: dodge it, or parry it.<br>
     Some knights have a blow of their own in place of a usual one; it is named beside their arms when you choose them.<br>
+    In the lists you fight three times, each foe a step harder, and whoever holds the title waits in the final.<br>
     A spear thrusts from beyond sword reach, so step inside the point. When its head starts to glow, the long thrust is coming. An axe hits hardest of all, but a raised shield shrugs it off.</div>
   <button class="main" id="howBack">Back</button>
 </div>
@@ -227,16 +267,26 @@
   <div class="tag" id="endSub"></div>
   <div class="rule"></div>
   <div id="stats"></div>
-  <div class="diffs" id="diffs2">
+  <button class="main lists-only" id="onward">Onward</button>
+  <div class="diffs duel-only" id="diffs2">
     <button data-d="squire">Squire</button><button data-d="knight">Knight</button><button data-d="warlord">Warlord</button>
   </div>
-  <button class="main" id="again">Fight again</button>
+  <button class="main duel-only" id="again">Fight again</button>
   <button class="home-button" id="menu">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true" focusable="false">
       <path d="M4 21V9H2V3H6V6H10V3H14V6H18V3H22V9H20V21Z M10 21V16A2 2 0 0 1 14 16V21 M7 11V14 M17 11V14"/>
     </svg>
     <span>Home</span>
   </button>
+</div>
+
+<div id="lists" class="overlay hidden">
+  <h1 id="listsTitle">The Lists</h1>
+  <div class="tag" id="listsTag"></div>
+  <div id="bracket"></div>
+  <p id="listsNote" aria-live="polite"></p>
+  <button class="main" id="listsGo">To the ring</button>
+  <button class="link" id="listsHome">Leave for now</button>
 </div>
 
 <div id="settings" class="overlay hidden">
